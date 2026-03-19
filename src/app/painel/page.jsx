@@ -77,8 +77,8 @@ export default function PainelPage() {
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Painel CMS</h1>
-        <p className="text-gray-600 mb-8">Crie e publique posts sem usar SQL manual.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Painel CMS</h1>
+        <p className="text-gray-600 mb-8 text-center">Crie e publique posts</p>
 
         <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm">
           <div>
@@ -88,7 +88,7 @@ export default function PainelPage() {
               type="password"
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
               placeholder="Digite a senha do CMS"
               required
             />
@@ -101,7 +101,7 @@ export default function PainelPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
               required
             />
           </div>
@@ -113,7 +113,7 @@ export default function PainelPage() {
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
               placeholder="se vazio, gera pelo titulo"
             />
             <p className="text-xs text-gray-500 mt-1">Slug final: {slugPreview}</p>
@@ -125,7 +125,7 @@ export default function PainelPage() {
               id="category"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white"
               required
             >
               <option value="Cozinha">Cozinha</option>
@@ -141,7 +141,7 @@ export default function PainelPage() {
               rows={3}
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
               required
             />
           </div>
@@ -153,7 +153,7 @@ export default function PainelPage() {
               rows={8}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
               required
             />
           </div>
@@ -165,7 +165,7 @@ export default function PainelPage() {
               type="url"
               value={coverImageUrl}
               onChange={(e) => setCoverImageUrl(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
               placeholder="https://..."
             />
           </div>

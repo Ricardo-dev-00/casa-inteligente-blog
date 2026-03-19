@@ -134,6 +134,7 @@ export default function PainelPage() {
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [sessionSaving, setSessionSaving] = useState(false);
+  const [rememberDevice, setRememberDevice] = useState(true);
 
   const slugPreview = useMemo(() => slugify(slug || title), [slug, title]);
 
@@ -171,7 +172,7 @@ export default function PainelPage() {
       const response = await fetch("/api/admin/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminPassword }),
+        body: JSON.stringify({ adminPassword, rememberDevice }),
       });
       const result = await response.json();
       if (!response.ok) {
@@ -181,7 +182,11 @@ export default function PainelPage() {
 
       setSessionActive(true);
       setAdminPassword("");
-      setStatus("Sessao segura ativa neste navegador.");
+      setStatus(
+        rememberDevice
+          ? "Sessao segura ativa e lembrada neste dispositivo (30 dias)."
+          : "Sessao segura ativa neste navegador."
+      );
     } catch {
       setStatus("Erro de rede ao salvar a sessao.");
     } finally {
@@ -298,6 +303,14 @@ export default function PainelPage() {
                 >
                   {sessionSaving ? "Salvando..." : "Salvar sessao segura"}
                 </button>
+                <label className="text-xs text-gray-600 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={rememberDevice}
+                    onChange={(e) => setRememberDevice(e.target.checked)}
+                  />
+                  Lembrar neste dispositivo
+                </label>
                 {sessionActive ? (
                   <>
                     <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Sessao ativa</span>
@@ -310,7 +323,7 @@ export default function PainelPage() {
                     </button>
                   </>
                 ) : (
-                  <span className="text-xs text-gray-500">A senha sera guardada em cookie HttpOnly seguro.</span>
+                  <span className="text-xs text-gray-500">Cookie HttpOnly seguro (12h, ou 30 dias com lembrar dispositivo).</span>
                 )}
               </div>
             </div>

@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const CMS_SESSION_COOKIE_NAME = "cms_session";
 export const CMS_SESSION_TTL_SECONDS = 60 * 60 * 12;
+export const CMS_SESSION_REMEMBER_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 function sign(value, secret) {
   return createHmac("sha256", secret).update(value).digest("base64url");
@@ -21,11 +22,11 @@ export function isCmsPasswordValid(password) {
   return password === adminPassword;
 }
 
-export function createCmsSessionToken() {
+export function createCmsSessionToken(ttlSeconds = CMS_SESSION_TTL_SECONDS) {
   const adminPassword = getCmsAdminPassword();
   if (!adminPassword) return "";
 
-  const exp = Math.floor(Date.now() / 1000) + CMS_SESSION_TTL_SECONDS;
+  const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
   const payload = Buffer.from(JSON.stringify({ exp })).toString("base64url");
   const signature = sign(payload, adminPassword);
   return `${payload}.${signature}`;

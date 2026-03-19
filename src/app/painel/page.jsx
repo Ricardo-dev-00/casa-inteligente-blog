@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "../../components/Header";
 
 const CATEGORIES = ["Cozinha", "Organização", "Limpeza"];
@@ -131,16 +131,82 @@ export default function PainelPage() {
   const [editingPost, setEditingPost] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [sessionActive, setSessionActive] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionSaving, setSessionSaving] = useState(false);
 
   const slugPreview = useMemo(() => slugify(slug || title), [slug, title]);
 
+  useEffect(() => {
+    checkSession();
+  }, []);
+
+  async function checkSession() {
+    setSessionLoading(true);
+    try {
+      const response = await fetch("/api/admin/session", { cache: "no-store" });
+      const result = await response.json();
+      if (!response.ok) {
+        setStatus(`Erro: ${result?.error || "nao foi possivel verificar a sessao"}`);
+        setSessionActive(false);
+        return;
+      }
+      setSessionActive(Boolean(result?.authenticated));
+    } catch {
+      setSessionActive(false);
+    } finally {
+      setSessionLoading(false);
+    }
+  }
+
+  async function handleSaveSession() {
+    if (!adminPassword) {
+      setStatus("Digite a senha para salvar a sessao segura.");
+      return;
+    }
+
+    setSessionSaving(true);
+    setStatus("");
+    try {
+      const response = await fetch("/api/admin/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminPassword }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setStatus(`Erro: ${result?.error || "nao foi possivel salvar a sessao"}`);
+        return;
+      }
+
+      setSessionActive(true);
+      setAdminPassword("");
+      setStatus("Sessao segura ativa neste navegador.");
+    } catch {
+      setStatus("Erro de rede ao salvar a sessao.");
+    } finally {
+      setSessionSaving(false);
+    }
+  }
+
+  async function handleLogoutSession() {
+    setStatus("");
+    try {
+      await fetch("/api/admin/session", { method: "DELETE" });
+      setSessionActive(false);
+      setStatus("Sessao encerrada.");
+    } catch {
+      setStatus("Erro de rede ao encerrar sessao.");
+    }
+  }
+
   async function loadPosts(pwd) {
     const password = pwd ?? adminPassword;
-    if (!password) { setPostsError("Preencha a senha do painel antes de carregar."); return; }
     setLoadingPosts(true);
     setPostsError("");
     try {
-      const res = await fetch(`/api/admin/posts?password=${encodeURIComponent(password)}`);
+      const query = password ? `?password=${encodeURIComponent(password)}` : "";
+      const res = await fetch(`/api/admin/posts${query}`);
       const result = await res.json();
       if (!res.ok) { setPostsError(result?.error || "Erro ao carregar posts."); return; }
       setPosts(result.posts);
@@ -153,6 +219,10 @@ export default function PainelPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (!sessionActive && !adminPassword) {
+      setStatus("Digite a senha do painel ou ative a sessao segura.");
+      return;
+    }
     setIsSaving(true);
     setStatus("");
     try {
@@ -217,7 +287,32 @@ export default function PainelPage() {
               <label htmlFor="adminPassword" className="block text-sm font-semibold text-gray-700 mb-1">Senha do painel</label>
               <input id="adminPassword" type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
-                placeholder="Digite a senha do CMS" required />
+                placeholder={sessionActive ? "Sessao segura ativa" : "Digite a senha do CMS"}
+                required={!sessionActive} />
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSaveSession}
+                  disabled={sessionSaving || sessionLoading}
+                  className="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-100 disabled:opacity-70"
+                >
+                  {sessionSaving ? "Salvando..." : "Salvar sessao segura"}
+                </button>
+                {sessionActive ? (
+                  <>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Sessao ativa</span>
+                    <button
+                      type="button"
+                      onClick={handleLogoutSession}
+                      className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-gray-200"
+                    >
+                      Encerrar sessao
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-xs text-gray-500">A senha sera guardada em cookie HttpOnly seguro.</span>
+                )}
+              </div>
             </div>
             <div>
               <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-1">Titulo</label>
@@ -281,7 +376,7 @@ export default function PainelPage() {
           ) : null}
 
           {posts === null ? (
-            <p className="text-gray-400 text-sm">Digite a senha acima e clique em &quot;Carregar posts&quot; para listar.</p>
+            <p className="text-gray-400 text-sm">Clique em &quot;Carregar posts&quot; para listar (senha manual ou sessao segura).</p>
           ) : posts.length === 0 ? (
             <p className="text-gray-400 text-sm">Nenhum post encontrado.</p>
           ) : (

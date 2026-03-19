@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import { getCmsAuthResult } from "../../../../lib/adminAuth";
 import { getSupabaseAdminClient } from "../../../../lib/supabase";
 
 function slugify(input) {
@@ -20,17 +21,16 @@ function revalidateAll(slug) {
   if (slug) revalidatePath(`/posts/${slug}`);
 }
 
-function checkAuth(password) {
-  const adminPassword = process.env.CMS_ADMIN_PASSWORD;
-  if (!adminPassword) return { error: "CMS_ADMIN_PASSWORD nao configurada no servidor.", status: 500 };
-  if (password !== adminPassword) return { error: "Senha do painel invalida.", status: 401 };
-  return null;
+function checkAuth(request, password) {
+  const result = getCmsAuthResult(request, password);
+  if (result.ok) return null;
+  return { error: result.error, status: result.status };
 }
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const authError = checkAuth(searchParams.get("password"));
+    const authError = checkAuth(request, searchParams.get("password"));
     if (authError) return Response.json({ error: authError.error }, { status: authError.status });
 
     const supabase = getSupabaseAdminClient();
@@ -53,7 +53,7 @@ export async function GET(request) {
 export async function PATCH(request) {
   try {
     const body = await request.json();
-    const authError = checkAuth(body?.adminPassword);
+    const authError = checkAuth(request, body?.adminPassword);
     if (authError) return Response.json({ error: authError.error }, { status: authError.status });
 
     const id = body?.id;
@@ -94,7 +94,7 @@ export async function PATCH(request) {
 export async function DELETE(request) {
   try {
     const body = await request.json();
-    const authError = checkAuth(body?.adminPassword);
+    const authError = checkAuth(request, body?.adminPassword);
     if (authError) return Response.json({ error: authError.error }, { status: authError.status });
 
     const id = body?.id;
@@ -117,17 +117,8 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    const adminPassword = process.env.CMS_ADMIN_PASSWORD;
-    if (!adminPassword) {
-      return Response.json(
-        { error: "CMS_ADMIN_PASSWORD nao configurada no servidor." },
-        { status: 500 }
-      );
-    }
-
-    if (body?.adminPassword !== adminPassword) {
-      return Response.json({ error: "Senha do painel invalida." }, { status: 401 });
-    }
+    const authError = checkAuth(request, body?.adminPassword);
+    if (authError) return Response.json({ error: authError.error }, { status: authError.status });
 
     const title = (body?.title || "").trim();
     const category = (body?.category || "").trim();

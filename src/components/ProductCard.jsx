@@ -1,3 +1,5 @@
+"use client";
+
 export default function ProductCard({ name, image, price, oldPrice, link }) {
   return (
     <div className="bg-white rounded-2xl shadow hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-4 relative flex flex-col">
@@ -13,6 +15,10 @@ export default function ProductCard({ name, image, price, oldPrice, link }) {
           src={image || "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&q=80"}
           alt={name || "Produto"}
           className="w-full h-44 object-cover hover:scale-105 transition-transform duration-300"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='180' viewBox='0 0 300 180'%3E%3Crect width='300' height='180' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='13' font-family='sans-serif'%3EImagem indispon%C3%ADvel%3C/text%3E%3C/svg%3E";
+          }}
         />
       </div>
 

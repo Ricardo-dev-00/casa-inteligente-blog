@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 
 const navLinks = [
-  { label: "Home", href: "#topo" },
-  { label: "Cozinha", href: "#cozinha" },
-  { label: "Organização", href: "#organizacao" },
-  { label: "Limpeza", href: "#limpeza" },
-  { label: "Ofertas do Dia", href: "#ofertas", highlight: true },
+  { label: "Home", href: "/" },
+  { label: "Cozinha", href: "/cozinha" },
+  { label: "Organização", href: "/organizacao" },
+  { label: "Limpeza", href: "/limpeza" },
+  { label: "Ofertas do Dia", href: "/ofertas", highlight: true },
 ];
 
 export default function Header() {
@@ -35,7 +35,7 @@ export default function Header() {
   return (
     <header ref={headerRef} className="bg-white shadow sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-        <a href="#topo" className="font-bold text-xl text-green-600">
+        <a href="/" className="font-bold text-xl text-green-600">
           🏠 Casa Inteligente
         </a>
 

@@ -5,7 +5,7 @@ export default function Footer() {
 
         {/* Marca */}
         <div>
-          <h2 className="text-xl font-bold mb-3">🏠 Casa Inteligente</h2>
+          <h2 className="text-xl font-bold mb-3 opacity-100 text-gray-900">🏠 Casa Inteligente</h2>
           <p className="text-gray-600 text-sm">
             Dicas, produtos e soluções práticas para facilitar seu dia a dia em casa.
           </p>
@@ -13,19 +13,19 @@ export default function Footer() {
 
         {/* Navegação */}
         <div>
-          <h3 className="font-semibold mb-3">Navegação</h3>
+          <h3 className="font-semibold mb-3 opacity-100 text-gray-900">Navegação</h3>
           <ul className="space-y-2 text-gray-600 text-sm">
-            <li><a href="#" className="hover:text-green-500 transition-colors">Home</a></li>
-            <li><a href="#" className="hover:text-green-500 transition-colors">Cozinha</a></li>
-            <li><a href="#" className="hover:text-green-500 transition-colors">Organização</a></li>
-            <li><a href="#" className="hover:text-green-500 transition-colors">Limpeza</a></li>
-            <li><a href="#" className="hover:text-green-500 transition-colors">Ofertas do Dia</a></li>
+            <li><a href="/" className="hover:text-green-500 transition-colors">Home</a></li>
+            <li><a href="/cozinha" className="hover:text-green-500 transition-colors">Cozinha</a></li>
+            <li><a href="/organizacao" className="hover:text-green-500 transition-colors">Organização</a></li>
+            <li><a href="/limpeza" className="hover:text-green-500 transition-colors">Limpeza</a></li>
+            <li><a href="#ofertas" className="hover:text-green-500 transition-colors">Ofertas do Dia</a></li>
           </ul>
         </div>
 
         {/* Legal / Info */}
         <div>
-          <h3 className="font-semibold mb-3">Informações</h3>
+          <h3 className="font-semibold mb-3 opacity-100 text-gray-900">Informações</h3>
           <ul className="space-y-2 text-gray-600 text-sm">
             <li><a href="#" className="hover:text-green-500 transition-colors">Sobre</a></li>
             <li><a href="#" className="hover:text-green-500 transition-colors">Contato</a></li>

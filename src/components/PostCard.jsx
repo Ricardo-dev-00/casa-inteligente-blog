@@ -1,11 +1,21 @@
-export default function PostCard({ title, excerpt, image, category, date }) {
+"use client";
+
+export default function PostCard({ title, excerpt, image, category, date, href }) {
+  const Wrapper = href ? "a" : "div";
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer group overflow-hidden">
+    <Wrapper
+      href={href}
+      className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer group overflow-hidden block"
+    >
       <div className="overflow-hidden">
         <img
           src={image || "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&q=80"}
           alt={title || "Post do blog"}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Crect width='400' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='14' font-family='sans-serif'%3EImagem indispon%C3%ADvel%3C/text%3E%3C/svg%3E";
+          }}
         />
       </div>
 
@@ -31,6 +41,6 @@ export default function PostCard({ title, excerpt, image, category, date }) {
           </span>
         </div>
       </div>
-    </div>
+    </Wrapper>
   );
 }

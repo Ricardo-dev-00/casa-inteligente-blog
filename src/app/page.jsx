@@ -3,33 +3,7 @@ import Hero from "../components/Hero";
 import PostCard from "../components/PostCard";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
-
-const posts = [
-  {
-    id: 1,
-    title: "10 produtos para organizar sua casa de vez",
-    excerpt: "Veja itens simples e baratos que fazem muita diferença no dia a dia.",
-    image: "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&q=80",
-    category: "Organização",
-    date: "19 mar 2026",
-  },
-  {
-    id: 2,
-    title: "Os melhores utensílios de cozinha em 2026",
-    excerpt: "Equipamentos que facilitam o preparo das refeições e deixam a cozinha mais funcional.",
-    image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80",
-    category: "Cozinha",
-    date: "15 mar 2026",
-  },
-  {
-    id: 3,
-    title: "Como manter a casa limpa gastando pouco",
-    excerpt: "Dicas práticas e produtos de limpeza eficientes para sua rotina diária.",
-    image: "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=400&q=80",
-    category: "Limpeza",
-    date: "10 mar 2026",
-  },
-];
+import { getHomePosts } from "../lib/posts";
 
 const products = [
   {
@@ -63,12 +37,14 @@ const products = [
 ];
 
 const categories = [
-  { label: "Cozinha", emoji: "🍳", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", id: "cozinha", href: "#cozinha" },
-  { label: "Organização", emoji: "🧺", bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", id: "organizacao", href: "#organizacao" },
-  { label: "Limpeza", emoji: "🧼", bg: "bg-green-50", border: "border-green-200", text: "text-green-700", id: "limpeza", href: "#limpeza" },
+  { label: "Cozinha", emoji: "🍳", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", id: "cozinha", href: "/cozinha" },
+  { label: "Organização", emoji: "🧺", bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", id: "organizacao", href: "/organizacao" },
+  { label: "Limpeza", emoji: "🧼", bg: "bg-green-50", border: "border-green-200", text: "text-green-700", id: "limpeza", href: "/limpeza" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const posts = await getHomePosts(3);
+
   return (
     <div id="topo" className="bg-gray-50 min-h-screen scroll-smooth">
       <Header />
@@ -85,7 +61,7 @@ export default function Home() {
 
         <div className="grid md:grid-cols-3 gap-6">
           {posts.map((post) => (
-            <PostCard key={post.id} {...post} />
+            <PostCard key={post.id} {...post} href={`/posts/${post.slug}`} />
           ))}
         </div>
       </section>

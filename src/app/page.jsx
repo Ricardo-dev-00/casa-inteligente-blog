@@ -25,7 +25,7 @@ export default async function Home() {
       <section className="max-w-6xl mx-auto px-4 py-14">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <h2 className="text-2xl font-bold mb-2 md:mb-6 border-l-4 border-green-500 pl-3 text-gray-500">Posts recentes</h2>
-          <a href="#" className="text-green-600 text-sm font-medium hover:underline mb-6 md:mb-0 pl-4 md:pl-0">
+          <a href="/cozinha" className="text-green-600 text-sm font-medium hover:underline mb-6 md:mb-0 pl-4 md:pl-0">
             Ver todos →
           </a>
         </div>
@@ -42,7 +42,7 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <h2 className="text-2xl font-bold mb-2 md:mb-6 border-l-4 border-green-500 pl-3 text-gray-500">Ofertas do dia</h2>
-            <a href="#" className="text-green-600 text-sm font-medium hover:underline mb-6 md:mb-0 pl-4 md:pl-0">
+            <a href="/ofertas" className="text-green-600 text-sm font-medium hover:underline mb-6 md:mb-0 pl-4 md:pl-0">
               Ver mais ofertas →
             </a>
           </div>

@@ -19,7 +19,7 @@ export default function Footer() {
             <li><a href="/cozinha" className="hover:text-green-500 transition-colors">Cozinha</a></li>
             <li><a href="/organizacao" className="hover:text-green-500 transition-colors">Organização</a></li>
             <li><a href="/limpeza" className="hover:text-green-500 transition-colors">Limpeza</a></li>
-            <li><a href="#ofertas" className="hover:text-green-500 transition-colors">Ofertas do Dia</a></li>
+            <li><a href="/ofertas" className="hover:text-green-500 transition-colors">Ofertas do Dia</a></li>
           </ul>
         </div>
 

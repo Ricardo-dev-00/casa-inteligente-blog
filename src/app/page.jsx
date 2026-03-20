@@ -10,6 +10,7 @@ const categories = [
   { label: "Cozinha", emoji: "🍳", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", id: "cozinha", href: "/cozinha" },
   { label: "Organização", emoji: "🧺", bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", id: "organizacao", href: "/organizacao" },
   { label: "Limpeza", emoji: "🧼", bg: "bg-green-50", border: "border-green-200", text: "text-green-700", id: "limpeza", href: "/limpeza" },
+  { label: "Receitas", emoji: "🍽️", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", id: "receitas", href: "/receitas" },
 ];
 
 export default async function Home() {
@@ -59,7 +60,7 @@ export default async function Home() {
       <section id="categorias" className="max-w-6xl mx-auto px-4 py-14">
         <h2 className="text-2xl font-bold mb-6 border-l-4 border-green-500 pl-3 text-gray-500">Explore por categoria</h2>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
           {categories.map(({ label, emoji, bg, border, text, id, href }) => (
             <a
               key={label}

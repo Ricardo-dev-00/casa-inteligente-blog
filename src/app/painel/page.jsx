@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Header from "../../components/Header";
 
-const CATEGORIES = ["Cozinha", "Organização", "Limpeza"];
+const CATEGORIES = ["Cozinha", "Organização", "Limpeza", "Receitas"];
 
 function slugify(input) {
   return input

@@ -17,7 +17,7 @@ export default function Hero() {
           </p>
 
           <div className="flex gap-3">
-            <a href="#ofertas" className="bg-green-500 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-green-600 hover:scale-105 transition duration-200 animate-pulse cursor-pointer text-sm sm:text-base whitespace-nowrap inline-block">
+            <a href="/ofertas" className="bg-green-500 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-green-600 hover:scale-105 transition duration-200 animate-pulse cursor-pointer text-sm sm:text-base whitespace-nowrap inline-block">
               🔥 Ver ofertas
             </a>
             <a href="#categorias" className="border border-gray-400 text-gray-700 px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-white shadow-sm hover:bg-gray-100 hover:border-gray-500 hover:scale-105 transition duration-200 font-semibold text-sm sm:text-base whitespace-nowrap inline-block">

@@ -64,7 +64,7 @@ export default function Sobre() {
           <section>
             <h2 className="text-2xl font-semibold mb-4 text-gray-900">Nossas Categorias</h2>
             <p className="mb-4">
-              Organizamos nosso conteúdo em três categorias principais para facilitar sua navegação:
+              Organizamos nosso conteúdo em quatro categorias principais para facilitar sua navegação:
             </p>
             <ul className="space-y-3">
               <li>
@@ -75,6 +75,9 @@ export default function Sobre() {
               </li>
               <li>
                 <strong>🧼 Limpeza:</strong> Técnicas eficientes, produtos recomendados e dicas para manter a limpeza em dia.
+              </li>
+              <li>
+                <strong>🍽️ Receitas:</strong> Receitas práticas, ideias para o dia a dia e inspirações para aproveitar melhor sua cozinha.
               </li>
             </ul>
           </section>

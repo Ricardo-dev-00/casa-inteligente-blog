@@ -18,6 +18,7 @@ function revalidateAll(slug) {
   revalidatePath("/cozinha");
   revalidatePath("/organizacao");
   revalidatePath("/limpeza");
+  revalidatePath("/receitas");
   if (slug) revalidatePath(`/posts/${slug}`);
 }
 

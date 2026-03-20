@@ -7,6 +7,7 @@ const navLinks = [
   { label: "Cozinha", href: "/cozinha" },
   { label: "Organização", href: "/organizacao" },
   { label: "Limpeza", href: "/limpeza" },
+  { label: "Receitas", href: "/receitas" },
   { label: "Ofertas do Dia", href: "/ofertas", highlight: true },
 ];
 

@@ -29,6 +29,7 @@ function getCategoryHref(category) {
   if (normalized.includes("cozinha")) return "/cozinha";
   if (normalized.includes("organiza")) return "/organizacao";
   if (normalized.includes("limpeza")) return "/limpeza";
+  if (normalized.includes("receita")) return "/receitas";
 
   return "/";
 }

@@ -210,7 +210,6 @@ export default function PainelPage() {
 
   const [productName, setProductName] = useState("");
   const [productSlug, setProductSlug] = useState("");
-  const [productCategory, setProductCategory] = useState("Organização");
   const [productDescription, setProductDescription] = useState("");
   const [productImageUrl, setProductImageUrl] = useState("");
   const [productImageAlt, setProductImageAlt] = useState("");
@@ -239,7 +238,6 @@ export default function PainelPage() {
     setEditingProductId(null);
     setProductName("");
     setProductSlug("");
-    setProductCategory("Organização");
     setProductDescription("");
     setProductImageUrl("");
     setProductImageAlt("");
@@ -261,7 +259,6 @@ export default function PainelPage() {
     setEditingProductId(Number(product.id));
     setProductName(product.name || "");
     setProductSlug(product.slug || "");
-    setProductCategory(product.category || "Organização");
     setProductDescription(product.description || "");
     setProductImageUrl(product.image_url || "");
     setProductImageAlt(product.image_alt || "");
@@ -444,7 +441,6 @@ export default function PainelPage() {
           id: editingProductId,
           name: productName,
           slug: productSlug,
-          category: productCategory,
           description: productDescription,
           imageUrl: productImageUrl,
           imageAlt: productImageAlt,
@@ -709,12 +705,6 @@ export default function PainelPage() {
               <label className="block text-sm font-semibold text-gray-700 mb-1">Slug (opcional)</label>
               <input value={productSlug} onChange={(e) => setProductSlug(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
               <p className="text-xs text-gray-500 mt-1">Slug final: {productSlugPreview}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Categoria</label>
-              <select value={productCategory} onChange={(e) => setProductCategory(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900">
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Preco</label>

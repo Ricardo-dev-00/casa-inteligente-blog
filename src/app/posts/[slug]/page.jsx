@@ -8,6 +8,20 @@ import {
   getRelatedPostsData,
 } from "../../../lib/posts";
 
+function getSiteUrl() {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) {
+    return configured.startsWith("http") ? configured : `https://${configured}`;
+  }
+
+  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (vercelUrl) {
+    return `https://${vercelUrl}`;
+  }
+
+  return "http://localhost:3000";
+}
+
 export async function generateStaticParams() {
   const slugs = await getAllPostSlugs();
   return slugs.map((slug) => ({ slug }));
@@ -17,9 +31,31 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const post = await getPostBySlugData(slug);
   if (!post) return {};
+
+  const siteUrl = getSiteUrl();
+  const postUrl = `${siteUrl}/posts/${post.slug}`;
+
   return {
-    title: `${post.title} | Casa Inteligente`,
+    title: post.title,
     description: post.excerpt,
+    alternates: {
+      canonical: `/posts/${post.slug}`,
+    },
+    openGraph: {
+      type: "article",
+      url: postUrl,
+      title: post.title,
+      description: post.excerpt,
+      images: post.image ? [{ url: post.image, alt: post.title }] : [],
+      locale: "pt_BR",
+      siteName: "Casa Inteligente",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt,
+      images: post.image ? [post.image] : undefined,
+    },
   };
 }
 
@@ -40,9 +76,36 @@ export default async function PostPage({ params }) {
   if (!post) notFound();
 
   const relatedPosts = await getRelatedPostsData(post.relatedSlugs || [], post.category);
+  const siteUrl = getSiteUrl();
+  const postUrl = `${siteUrl}/posts/${post.slug}`;
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    inLanguage: "pt-BR",
+    articleSection: post.category,
+    mainEntityOfPage: postUrl,
+    url: postUrl,
+    image: post.image ? [post.image] : undefined,
+    author: {
+      "@type": "Organization",
+      name: "Casa Inteligente",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Casa Inteligente",
+    },
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <Header />
 
       <main className="max-w-3xl mx-auto px-4 py-10">
@@ -137,7 +200,7 @@ export default async function PostPage({ params }) {
                       rel="noopener noreferrer"
                       className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 hover:scale-105 transition font-semibold whitespace-nowrap"
                     >
-                      🛒 Ver oferta
+                      Ver preco atualizado
                     </a>
                   </div>
                 </div>

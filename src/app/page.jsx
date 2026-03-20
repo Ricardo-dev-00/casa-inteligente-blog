@@ -6,6 +6,44 @@ import Footer from "../components/Footer";
 import { getHomePosts } from "../lib/posts";
 import { getOfferProducts } from "../lib/products";
 
+function getSiteUrl() {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) {
+    return configured.startsWith("http") ? configured : `https://${configured}`;
+  }
+
+  const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (vercelUrl) {
+    return `https://${vercelUrl}`;
+  }
+
+  return "http://localhost:3000";
+}
+
+const siteUrl = getSiteUrl();
+
+export const metadata = {
+  title: "Dicas e ofertas para sua casa",
+  description:
+    "Encontre dicas de cozinha, organização, limpeza e receitas com recomendações de produtos e ofertas atualizadas.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    title: "Casa Inteligente | Dicas e ofertas para sua casa",
+    description:
+      "Dicas de casa e produtos recomendados para cozinha, organização, limpeza e receitas.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Casa Inteligente | Dicas e ofertas para sua casa",
+    description:
+      "Dicas de casa e produtos recomendados para cozinha, organização, limpeza e receitas.",
+  },
+};
+
 const categories = [
   { label: "Cozinha", emoji: "🍳", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", id: "cozinha", href: "/cozinha" },
   { label: "Organização", emoji: "🧺", bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", id: "organizacao", href: "/organizacao" },
@@ -16,9 +54,27 @@ const categories = [
 export default async function Home() {
   const posts = await getHomePosts(3);
   const products = await getOfferProducts(4);
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Casa Inteligente",
+    url: siteUrl,
+    inLanguage: "pt-BR",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/ofertas`,
+      "query-input": "required name=search_term_string",
+    },
+  };
 
   return (
     <div id="topo" className="bg-gray-50 min-h-screen scroll-smooth">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(websiteJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <Header />
       <Hero />
 

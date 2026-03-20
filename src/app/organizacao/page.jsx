@@ -6,6 +6,15 @@ import { getPostsByCategory } from "../../lib/posts";
 export const metadata = {
   title: "Organização | Casa Inteligente",
   description: "Soluções inteligentes para manter sua casa organizada e otimizar seus espaços com praticidade.",
+  alternates: {
+    canonical: "/organizacao",
+  },
+  openGraph: {
+    url: "/organizacao",
+    type: "website",
+    title: "Organização | Casa Inteligente",
+    description: "Soluções inteligentes para manter sua casa organizada e otimizar seus espaços com praticidade.",
+  },
 };
 
 export default async function Organizacao() {

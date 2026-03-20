@@ -6,6 +6,15 @@ import { getPostsByCategory } from "../../lib/posts";
 export const metadata = {
   title: "Receitas | Casa Inteligente",
   description: "Receitas praticas, ideias para o dia a dia e inspiracoes para aproveitar melhor sua cozinha.",
+  alternates: {
+    canonical: "/receitas",
+  },
+  openGraph: {
+    url: "/receitas",
+    type: "website",
+    title: "Receitas | Casa Inteligente",
+    description: "Receitas praticas, ideias para o dia a dia e inspiracoes para aproveitar melhor sua cozinha.",
+  },
 };
 
 export default async function Receitas() {

@@ -6,6 +6,15 @@ import { getOfferProducts } from "../../lib/products";
 export const metadata = {
   title: "Ofertas | Casa Inteligente",
   description: "Confira as melhores ofertas de produtos para cozinha, organizacao e limpeza.",
+  alternates: {
+    canonical: "/ofertas",
+  },
+  openGraph: {
+    url: "/ofertas",
+    type: "website",
+    title: "Ofertas | Casa Inteligente",
+    description: "Confira as melhores ofertas de produtos para cozinha, organizacao e limpeza.",
+  },
 };
 
 export default async function Ofertas() {

@@ -6,6 +6,15 @@ import { getPostsByCategory } from "../../lib/posts";
 export const metadata = {
   title: "Cozinha | Casa Inteligente",
   description: "Produtos e dicas para deixar sua cozinha mais prática, organizada e funcional no dia a dia.",
+  alternates: {
+    canonical: "/cozinha",
+  },
+  openGraph: {
+    url: "/cozinha",
+    type: "website",
+    title: "Cozinha | Casa Inteligente",
+    description: "Produtos e dicas para deixar sua cozinha mais prática, organizada e funcional no dia a dia.",
+  },
 };
 
 export default async function Cozinha() {

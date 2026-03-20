@@ -6,6 +6,15 @@ import { getPostsByCategory } from "../../lib/posts";
 export const metadata = {
   title: "Limpeza | Casa Inteligente",
   description: "Itens essenciais para facilitar a limpeza e manter sua casa sempre limpa e agradavel.",
+  alternates: {
+    canonical: "/limpeza",
+  },
+  openGraph: {
+    url: "/limpeza",
+    type: "website",
+    title: "Limpeza | Casa Inteligente",
+    description: "Itens essenciais para facilitar a limpeza e manter sua casa sempre limpa e agradavel.",
+  },
 };
 
 export default async function Limpeza() {

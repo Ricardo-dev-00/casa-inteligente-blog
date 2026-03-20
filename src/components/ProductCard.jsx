@@ -44,7 +44,7 @@ export default function ProductCard({ name, image, price, oldPrice, link }) {
         rel="noopener noreferrer"
         className="w-full bg-green-500 text-white py-2.5 rounded-lg hover:bg-green-600 active:bg-green-700 transition-colors font-semibold text-sm text-center block cursor-pointer"
       >
-        🛒 Ver oferta
+        Ver preco atualizado
       </a>
     </div>
   );

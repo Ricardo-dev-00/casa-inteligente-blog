@@ -23,6 +23,16 @@ export async function generateMetadata({ params }) {
   };
 }
 
+function renderBold(text) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
 export default async function PostPage({ params }) {
   const { slug } = await params;
   const post = await getPostBySlugData(slug);
@@ -70,7 +80,7 @@ export default async function PostPage({ params }) {
         <div className="space-y-4 mb-10">
           {post.intro.map((paragraph, i) => (
             <p key={i} className="text-gray-600 leading-relaxed text-base">
-              {paragraph}
+              {renderBold(paragraph)}
             </p>
           ))}
         </div>

@@ -586,6 +586,7 @@ export default function PainelPage() {
             </div>
             <div>
               <label htmlFor="content" className="block text-sm font-semibold text-gray-700 mb-1">Conteudo</label>
+              <p className="text-xs text-gray-400 mb-1">Use <code className="bg-gray-100 px-1 rounded">**texto**</code> para <strong>negrito</strong>. Separe paragrafos com uma linha em branco.</p>
               <textarea id="content" rows={8} value={content} onChange={(e) => setContent(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400" required />
             </div>

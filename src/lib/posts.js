@@ -41,6 +41,7 @@ function mapDbRowToPostCard(row) {
     title: row.title,
     excerpt: row.excerpt || "",
     image: row.cover_image_url || "",
+    imageAlt: row.cover_image_alt || "",
     category: row.category || "",
     date: formatDatePtBr(row.created_at),
   };
@@ -63,7 +64,7 @@ export async function getHomePosts(limit = 3) {
 
   const { data, error } = await supabase
     .from("posts")
-    .select("id, title, slug, excerpt, category, cover_image_url, created_at, published")
+    .select("*")
     .eq("published", true)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -112,7 +113,7 @@ export async function getPostBySlugData(slug) {
 
   const { data, error } = await supabase
     .from("posts")
-    .select("id, title, slug, excerpt, content, category, cover_image_url, created_at, published")
+    .select("*")
     .eq("slug", slug)
     .eq("published", true)
     .maybeSingle();
@@ -147,6 +148,7 @@ export async function getPostBySlugData(slug) {
     categoryHref: getCategoryHref(data.category || localPost?.category),
     date: formatDatePtBr(data.created_at),
     image: data.cover_image_url || localPost?.image || "",
+    imageAlt: data.cover_image_alt || localPost?.imageAlt || "",
     intro: introFromDb.length ? introFromDb : localPost?.intro || [],
     products: dbProducts.length ? dbProducts : localPost?.products || [],
     relatedSlugs: localPost?.relatedSlugs || [],
@@ -172,7 +174,7 @@ export async function getPostsByCategory(category) {
 
   const { data, error } = await supabase
     .from("posts")
-    .select("id, title, slug, excerpt, category, cover_image_url, created_at, published")
+    .select("*")
     .ilike("category", category)
     .eq("published", true)
     .order("created_at", { ascending: false });
@@ -192,7 +194,7 @@ export async function getRelatedPostsData(slugs, fallbackCategory) {
   if (Array.isArray(slugs) && slugs.length > 0) {
     const { data, error } = await supabase
       .from("posts")
-      .select("id, title, slug, excerpt, category, cover_image_url, created_at, published")
+      .select("*")
       .in("slug", slugs)
       .eq("published", true)
       .limit(4);
@@ -204,7 +206,7 @@ export async function getRelatedPostsData(slugs, fallbackCategory) {
 
   const query = supabase
     .from("posts")
-    .select("id, title, slug, excerpt, category, cover_image_url, created_at, published")
+    .select("*")
     .eq("published", true)
     .order("created_at", { ascending: false })
     .limit(4);

@@ -1,6 +1,6 @@
 "use client";
 
-export default function ProductCard({ name, image, price, oldPrice, link }) {
+export default function ProductCard({ name, image, imageAlt, price, oldPrice, link }) {
   return (
     <div className="bg-white rounded-2xl shadow hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-4 relative flex flex-col">
 
@@ -13,7 +13,7 @@ export default function ProductCard({ name, image, price, oldPrice, link }) {
       <div className="overflow-hidden rounded-xl mb-4">
         <img
           src={image || "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&q=80"}
-          alt={name || "Produto"}
+          alt={imageAlt || name || "Produto"}
           className="w-full h-44 object-cover hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             e.currentTarget.onerror = null;

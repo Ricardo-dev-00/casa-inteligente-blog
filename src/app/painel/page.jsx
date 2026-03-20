@@ -50,6 +50,7 @@ function EditModal({ post, allProducts, adminPassword, onClose, onSaved }) {
   const [excerpt, setExcerpt] = useState(post.excerpt || "");
   const [content, setContent] = useState(post.content || "");
   const [coverImageUrl, setCoverImageUrl] = useState(post.cover_image_url || "");
+  const [coverImageAlt, setCoverImageAlt] = useState(post.cover_image_alt || "");
   const [published, setPublished] = useState(Boolean(post.published));
   const [selectedProductIds, setSelectedProductIds] = useState((post.productIds || []).map((id) => Number(id)));
   const [isSaving, setIsSaving] = useState(false);
@@ -81,6 +82,7 @@ function EditModal({ post, allProducts, adminPassword, onClose, onSaved }) {
           excerpt,
           content,
           coverImageUrl,
+          coverImageAlt,
           published,
           productIds: selectedProductIds,
           adminPassword,
@@ -142,6 +144,12 @@ function EditModal({ post, allProducts, adminPassword, onClose, onSaved }) {
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
               placeholder="https://..." />
           </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Texto alt da imagem de capa (opcional)</label>
+            <input type="text" value={coverImageAlt} onChange={(e) => setCoverImageAlt(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
+              placeholder="Ex.: Organizadores para cozinha em bancada" />
+          </div>
 
           <ProductSelector
             allProducts={allProducts}
@@ -177,6 +185,7 @@ export default function PainelPage() {
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [coverImageAlt, setCoverImageAlt] = useState("");
   const [published, setPublished] = useState(true);
   const [selectedProductIds, setSelectedProductIds] = useState([]);
 
@@ -204,6 +213,7 @@ export default function PainelPage() {
   const [productCategory, setProductCategory] = useState("Organização");
   const [productDescription, setProductDescription] = useState("");
   const [productImageUrl, setProductImageUrl] = useState("");
+  const [productImageAlt, setProductImageAlt] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productOldPrice, setProductOldPrice] = useState("");
   const [productLink, setProductLink] = useState("");
@@ -232,6 +242,7 @@ export default function PainelPage() {
     setProductCategory("Organização");
     setProductDescription("");
     setProductImageUrl("");
+    setProductImageAlt("");
     setProductPrice("");
     setProductOldPrice("");
     setProductLink("");
@@ -253,6 +264,7 @@ export default function PainelPage() {
     setProductCategory(product.category || "Organização");
     setProductDescription(product.description || "");
     setProductImageUrl(product.image_url || "");
+    setProductImageAlt(product.image_alt || "");
     setProductPrice(product.price || "");
     setProductOldPrice(product.old_price || "");
     setProductLink(product.link || "");
@@ -385,6 +397,7 @@ export default function PainelPage() {
           excerpt,
           content,
           coverImageUrl,
+          coverImageAlt,
           published,
           productIds: selectedProductIds,
           adminPassword,
@@ -401,6 +414,7 @@ export default function PainelPage() {
       setExcerpt("");
       setContent("");
       setCoverImageUrl("");
+      setCoverImageAlt("");
       setPublished(true);
       setSelectedProductIds([]);
       await loadPosts(adminPassword);
@@ -433,6 +447,7 @@ export default function PainelPage() {
           category: productCategory,
           description: productDescription,
           imageUrl: productImageUrl,
+          imageAlt: productImageAlt,
           price: productPrice,
           oldPrice: productOldPrice,
           link: productLink,
@@ -586,6 +601,12 @@ export default function PainelPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
                 placeholder="https://..." />
             </div>
+            <div>
+              <label htmlFor="coverImageAlt" className="block text-sm font-semibold text-gray-700 mb-1">Texto alt da imagem de capa (opcional)</label>
+              <input id="coverImageAlt" type="text" value={coverImageAlt} onChange={(e) => setCoverImageAlt(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
+                placeholder="Ex.: Organizadores para cozinha em bancada" />
+            </div>
 
             <ProductSelector
               allProducts={products}
@@ -710,6 +731,10 @@ export default function PainelPage() {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">URL da imagem</label>
               <input type="url" value={productImageUrl} onChange={(e) => setProductImageUrl(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Texto alt da imagem (opcional)</label>
+              <input type="text" value={productImageAlt} onChange={(e) => setProductImageAlt(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" placeholder="Ex.: Organizador de gavetas com 6 divisorias" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Link de oferta</label>

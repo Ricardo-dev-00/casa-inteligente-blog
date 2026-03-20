@@ -46,7 +46,7 @@ export async function generateMetadata({ params }) {
       url: postUrl,
       title: post.title,
       description: post.excerpt,
-      images: post.image ? [{ url: post.image, alt: post.title }] : [],
+      images: post.image ? [{ url: post.image, alt: post.imageAlt || post.title }] : [],
       locale: "pt_BR",
       siteName: "Casa Inteligente",
     },
@@ -134,7 +134,7 @@ export default async function PostPage({ params }) {
         <div className="rounded-2xl overflow-hidden mb-8 shadow">
           <img
             src={post.image}
-            alt={post.title}
+            alt={post.imageAlt || post.title}
             className="w-full h-64 object-cover"
           />
         </div>
@@ -168,7 +168,7 @@ export default async function PostPage({ params }) {
                 <div className="shrink-0 mt-6 sm:mt-0">
                   <img
                     src={product.image}
-                    alt={product.name}
+                    alt={product.imageAlt || product.name}
                     className="w-full sm:w-32 h-32 object-cover rounded-xl"
                   />
                 </div>

@@ -9,6 +9,7 @@ function mapDbProduct(row) {
     category: row.category || "",
     description: row.description || "",
     image: row.image_url || "",
+    imageAlt: row.image_alt || "",
     price: row.price || "",
     oldPrice: row.old_price || "",
     link: row.link || "#",
@@ -24,6 +25,7 @@ function normalizeLocalProduct(product) {
     category: product.category || "",
     description: product.description || "",
     image: product.image || "",
+    imageAlt: product.imageAlt || "",
     price: product.price || "",
     oldPrice: product.oldPrice || "",
     link: product.link || "#",
@@ -41,7 +43,7 @@ export async function getOfferProducts(limit) {
 
   const query = supabase
     .from("products")
-    .select("id, slug, name, category, description, image_url, price, old_price, link, active")
+    .select("*")
     .eq("active", true)
     .order("created_at", { ascending: false });
 
@@ -67,7 +69,7 @@ export async function getProductsByIds(ids = []) {
 
   const { data, error } = await supabase
     .from("products")
-    .select("id, slug, name, category, description, image_url, price, old_price, link, active")
+    .select("*")
     .in("id", normalizedIds)
     .eq("active", true);
 

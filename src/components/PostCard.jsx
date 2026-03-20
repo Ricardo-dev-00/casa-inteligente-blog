@@ -1,6 +1,6 @@
 "use client";
 
-export default function PostCard({ title, excerpt, image, category, date, href }) {
+export default function PostCard({ title, excerpt, image, imageAlt, category, date, href }) {
   const Wrapper = href ? "a" : "div";
   return (
     <Wrapper
@@ -10,7 +10,7 @@ export default function PostCard({ title, excerpt, image, category, date, href }
       <div className="overflow-hidden">
         <img
           src={image || "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&q=80"}
-          alt={title || "Post do blog"}
+          alt={imageAlt || title || "Post do blog"}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             e.currentTarget.onerror = null;

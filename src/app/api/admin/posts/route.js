@@ -38,6 +38,11 @@ function normalizeProductIds(productIds) {
   );
 }
 
+function isMissingColumnError(error, columnName) {
+  const message = String(error?.message || "").toLowerCase();
+  return message.includes("column") && message.includes(String(columnName).toLowerCase());
+}
+
 async function getPostProductMap(supabase, postIds) {
   if (!Array.isArray(postIds) || postIds.length === 0) return new Map();
 
@@ -91,7 +96,7 @@ export async function GET(request) {
 
     const { data, error } = await supabase
       .from("posts")
-      .select("id, title, slug, category, published, excerpt, content, cover_image_url, created_at")
+        .select("*")
       .order("category")
       .order("created_at", { ascending: false });
 
@@ -124,6 +129,7 @@ export async function PATCH(request) {
     const excerpt = (body?.excerpt || "").trim();
     const content = (body?.content || "").trim();
     const coverImageUrl = (body?.coverImageUrl || "").trim();
+    const coverImageAlt = (body?.coverImageAlt || "").trim();
     const published = Boolean(body?.published);
     const requestedSlug = (body?.slug || "").trim();
     const productIds = normalizeProductIds(body?.productIds);
@@ -136,12 +142,42 @@ export async function PATCH(request) {
     const supabase = getSupabaseAdminClient();
     if (!supabase) return Response.json({ error: "SUPABASE_SERVICE_ROLE_KEY nao configurada." }, { status: 500 });
 
-    const { data, error } = await supabase
+    const payloadWithAlt = {
+      title,
+      slug,
+      excerpt,
+      content,
+      category,
+      cover_image_url: coverImageUrl || null,
+      cover_image_alt: coverImageAlt || null,
+      published,
+    };
+
+    let { data, error } = await supabase
       .from("posts")
-      .update({ title, slug, excerpt, content, category, cover_image_url: coverImageUrl || null, published })
+      .update(payloadWithAlt)
       .eq("id", id)
-      .select("id, slug, title, category, published")
+      .select("id, slug, title, category, published, cover_image_url, cover_image_alt")
       .single();
+
+    if (error && isMissingColumnError(error, "cover_image_alt")) {
+      const retry = await supabase
+        .from("posts")
+        .update({
+          title,
+          slug,
+          excerpt,
+          content,
+          category,
+          cover_image_url: coverImageUrl || null,
+          published,
+        })
+        .eq("id", id)
+        .select("id, slug, title, category, published, cover_image_url")
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) return Response.json({ error: error.message }, { status: 400 });
 
@@ -191,6 +227,7 @@ export async function POST(request) {
     const excerpt = (body?.excerpt || "").trim();
     const content = (body?.content || "").trim();
     const coverImageUrl = (body?.coverImageUrl || "").trim();
+    const coverImageAlt = (body?.coverImageAlt || "").trim();
     const published = Boolean(body?.published);
     const requestedSlug = (body?.slug || "").trim();
     const productIds = normalizeProductIds(body?.productIds);
@@ -222,14 +259,33 @@ export async function POST(request) {
       content,
       category,
       cover_image_url: coverImageUrl || null,
+      cover_image_alt: coverImageAlt || null,
       published,
     };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("posts")
       .insert(payload)
-      .select("id, slug, title, category, published")
+      .select("id, slug, title, category, published, cover_image_url, cover_image_alt")
       .single();
+
+    if (error && isMissingColumnError(error, "cover_image_alt")) {
+      const retry = await supabase
+        .from("posts")
+        .insert({
+          title,
+          slug,
+          excerpt,
+          content,
+          category,
+          cover_image_url: coverImageUrl || null,
+          published,
+        })
+        .select("id, slug, title, category, published, cover_image_url")
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       return Response.json({ error: error.message }, { status: 400 });

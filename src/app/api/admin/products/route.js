@@ -25,19 +25,25 @@ function revalidateAll() {
   revalidatePath("/painel");
 }
 
+function isMissingColumnError(error, columnName) {
+  const message = String(error?.message || "").toLowerCase();
+  return message.includes("column") && message.includes(String(columnName).toLowerCase());
+}
+
 function normalizeBody(body) {
   const name = (body?.name || "").trim();
   const requestedSlug = (body?.slug || "").trim();
   const category = (body?.category || "").trim();
   const description = (body?.description || "").trim();
   const imageUrl = (body?.imageUrl || "").trim();
+  const imageAlt = (body?.imageAlt || "").trim();
   const price = (body?.price || "").trim();
   const oldPrice = (body?.oldPrice || "").trim();
   const link = (body?.link || "").trim();
   const active = body?.active !== false;
   const slug = slugify(requestedSlug || name);
 
-  return { name, slug, category, description, imageUrl, price, oldPrice, link, active };
+  return { name, slug, category, description, imageUrl, imageAlt, price, oldPrice, link, active };
 }
 
 export async function GET(request) {
@@ -51,7 +57,7 @@ export async function GET(request) {
 
     const { data, error } = await supabase
       .from("products")
-      .select("id, name, slug, category, description, image_url, price, old_price, link, active, created_at")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (error) return Response.json({ error: error.message }, { status: 400 });
@@ -68,7 +74,7 @@ export async function POST(request) {
     const authError = checkAuth(request, body?.adminPassword);
     if (authError) return Response.json({ error: authError.error }, { status: authError.status });
 
-    const { name, slug, category, description, imageUrl, price, oldPrice, link, active } = normalizeBody(body);
+    const { name, slug, category, description, imageUrl, imageAlt, price, oldPrice, link, active } = normalizeBody(body);
 
     if (!name || !price) {
       return Response.json({ error: "Preencha nome e preco do produto." }, { status: 400 });
@@ -77,21 +83,44 @@ export async function POST(request) {
     const supabase = getSupabaseAdminClient();
     if (!supabase) return Response.json({ error: "SUPABASE_SERVICE_ROLE_KEY nao configurada." }, { status: 500 });
 
-    const { data, error } = await supabase
+    const payloadWithAlt = {
+      name,
+      slug,
+      category: category || null,
+      description: description || null,
+      image_url: imageUrl || null,
+      image_alt: imageAlt || null,
+      price,
+      old_price: oldPrice || null,
+      link: link || null,
+      active,
+    };
+
+    let { data, error } = await supabase
       .from("products")
-      .insert({
-        name,
-        slug,
-        category: category || null,
-        description: description || null,
-        image_url: imageUrl || null,
-        price,
-        old_price: oldPrice || null,
-        link: link || null,
-        active,
-      })
-      .select("id, name, slug, category, description, image_url, price, old_price, link, active")
+      .insert(payloadWithAlt)
+      .select("id, name, slug, category, description, image_url, image_alt, price, old_price, link, active")
       .single();
+
+    if (error && isMissingColumnError(error, "image_alt")) {
+      const retry = await supabase
+        .from("products")
+        .insert({
+          name,
+          slug,
+          category: category || null,
+          description: description || null,
+          image_url: imageUrl || null,
+          price,
+          old_price: oldPrice || null,
+          link: link || null,
+          active,
+        })
+        .select("id, name, slug, category, description, image_url, price, old_price, link, active")
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) return Response.json({ error: error.message }, { status: 400 });
 
@@ -113,7 +142,7 @@ export async function PATCH(request) {
       return Response.json({ error: "ID do produto nao informado." }, { status: 400 });
     }
 
-    const { name, slug, category, description, imageUrl, price, oldPrice, link, active } = normalizeBody(body);
+    const { name, slug, category, description, imageUrl, imageAlt, price, oldPrice, link, active } = normalizeBody(body);
 
     if (!name || !price) {
       return Response.json({ error: "Preencha nome e preco do produto." }, { status: 400 });
@@ -122,22 +151,46 @@ export async function PATCH(request) {
     const supabase = getSupabaseAdminClient();
     if (!supabase) return Response.json({ error: "SUPABASE_SERVICE_ROLE_KEY nao configurada." }, { status: 500 });
 
-    const { data, error } = await supabase
+    const payloadWithAlt = {
+      name,
+      slug,
+      category: category || null,
+      description: description || null,
+      image_url: imageUrl || null,
+      image_alt: imageAlt || null,
+      price,
+      old_price: oldPrice || null,
+      link: link || null,
+      active,
+    };
+
+    let { data, error } = await supabase
       .from("products")
-      .update({
-        name,
-        slug,
-        category: category || null,
-        description: description || null,
-        image_url: imageUrl || null,
-        price,
-        old_price: oldPrice || null,
-        link: link || null,
-        active,
-      })
+      .update(payloadWithAlt)
       .eq("id", id)
-      .select("id, name, slug, category, description, image_url, price, old_price, link, active")
+      .select("id, name, slug, category, description, image_url, image_alt, price, old_price, link, active")
       .single();
+
+    if (error && isMissingColumnError(error, "image_alt")) {
+      const retry = await supabase
+        .from("products")
+        .update({
+          name,
+          slug,
+          category: category || null,
+          description: description || null,
+          image_url: imageUrl || null,
+          price,
+          old_price: oldPrice || null,
+          link: link || null,
+          active,
+        })
+        .eq("id", id)
+        .select("id, name, slug, category, description, image_url, price, old_price, link, active")
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) return Response.json({ error: error.message }, { status: 400 });
 

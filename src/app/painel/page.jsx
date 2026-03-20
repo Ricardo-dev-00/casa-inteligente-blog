@@ -614,6 +614,90 @@ export default function PainelPage() {
           </form>
         </section>
 
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-900">Posts existentes</h2>
+            <button onClick={() => loadPosts()} disabled={loadingPosts}
+              className="bg-gray-800 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-700 disabled:opacity-70">
+              {loadingPosts ? "Carregando..." : "Carregar posts"}
+            </button>
+          </div>
+
+          {postsError ? (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">{postsError}</p>
+          ) : null}
+
+          {posts === null ? (
+            <p className="text-gray-400 text-sm">Clique em "Carregar posts" para listar (senha manual ou sessao segura).</p>
+          ) : posts.length === 0 ? (
+            <p className="text-gray-400 text-sm">Nenhum post encontrado.</p>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(postsByCategory).map(([cat, catPosts]) => {
+                const isExpanded = expandedPostsCategory.has(cat);
+                const displayedPosts = isExpanded ? catPosts : catPosts.slice(-3);
+                return (
+                <div key={cat}>
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{cat}</h3>
+                  <ul className="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100">
+                    {displayedPosts.map((post) => (
+                      <li key={post.id} className="flex items-center justify-between px-4 py-3 gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-900 font-medium truncate">{post.title}</p>
+                          <p className="text-xs text-gray-400 truncate">/posts/{post.slug} | Produtos: {(post.productIds || []).length}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${post.published ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                            {post.published ? "Publicado" : "Rascunho"}
+                          </span>
+                          <button onClick={() => setEditingPost(post)}
+                            className="text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100">
+                            Editar
+                          </button>
+                          {confirmDeleteId === post.id ? (
+                            <>
+                              <button onClick={() => handleDelete(post)} disabled={deletingId === post.id}
+                                className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-70">
+                                {deletingId === post.id ? "..." : "Confirmar"}
+                              </button>
+                              <button onClick={() => setConfirmDeleteId(null)}
+                                className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-gray-200">
+                                Cancelar
+                              </button>
+                            </>
+                          ) : (
+                            <button onClick={() => setConfirmDeleteId(post.id)}
+                              className="text-xs bg-red-50 text-red-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-red-100">
+                              Excluir
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  {catPosts.length > 3 && (
+                    <button
+                      onClick={() => {
+                        const newSet = new Set(expandedPostsCategory);
+                        if (isExpanded) {
+                          newSet.delete(cat);
+                        } else {
+                          newSet.add(cat);
+                        }
+                        setExpandedPostsCategory(newSet);
+                      }}
+                      className="w-full text-center text-sm font-semibold text-blue-600 hover:text-blue-700 py-2 mt-2"
+                    >
+                      {isExpanded ? "↑ Mostrar menos" : `↓ Ver todos (${catPosts.length} posts)`}
+                    </button>
+                  )}
+                </div>
+              );
+              })}
+            </div>
+          )}
+        </section>
+
         <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <h2 className="text-2xl font-bold text-gray-900">Produtos</h2>
@@ -722,89 +806,6 @@ export default function PainelPage() {
           )}
         </section>
 
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">Posts existentes</h2>
-            <button onClick={() => loadPosts()} disabled={loadingPosts}
-              className="bg-gray-800 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-700 disabled:opacity-70">
-              {loadingPosts ? "Carregando..." : "Carregar posts"}
-            </button>
-          </div>
-
-          {postsError ? (
-            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">{postsError}</p>
-          ) : null}
-
-          {posts === null ? (
-            <p className="text-gray-400 text-sm">Clique em "Carregar posts" para listar (senha manual ou sessao segura).</p>
-          ) : posts.length === 0 ? (
-            <p className="text-gray-400 text-sm">Nenhum post encontrado.</p>
-          ) : (
-            <div className="space-y-6">
-              {Object.entries(postsByCategory).map(([cat, catPosts]) => {
-                const isExpanded = expandedPostsCategory.has(cat);
-                const displayedPosts = isExpanded ? catPosts : catPosts.slice(-3);
-                return (
-                <div key={cat}>
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{cat}</h3>
-                  <ul className="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100">
-                    {displayedPosts.map((post) => (
-                      <li key={post.id} className="flex items-center justify-between px-4 py-3 gap-4">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 font-medium truncate">{post.title}</p>
-                          <p className="text-xs text-gray-400 truncate">/posts/{post.slug} | Produtos: {(post.productIds || []).length}</p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${post.published ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                            {post.published ? "Publicado" : "Rascunho"}
-                          </span>
-                          <button onClick={() => setEditingPost(post)}
-                            className="text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100">
-                            Editar
-                          </button>
-                          {confirmDeleteId === post.id ? (
-                            <>
-                              <button onClick={() => handleDelete(post)} disabled={deletingId === post.id}
-                                className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-70">
-                                {deletingId === post.id ? "..." : "Confirmar"}
-                              </button>
-                              <button onClick={() => setConfirmDeleteId(null)}
-                                className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-gray-200">
-                                Cancelar
-                              </button>
-                            </>
-                          ) : (
-                            <button onClick={() => setConfirmDeleteId(post.id)}
-                              className="text-xs bg-red-50 text-red-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-red-100">
-                              Excluir
-                            </button>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                  {catPosts.length > 3 && (
-                    <button
-                      onClick={() => {
-                        const newSet = new Set(expandedPostsCategory);
-                        if (isExpanded) {
-                          newSet.delete(cat);
-                        } else {
-                          newSet.add(cat);
-                        }
-                        setExpandedPostsCategory(newSet);
-                      }}
-                      className="w-full text-center text-sm font-semibold text-blue-600 hover:text-blue-700 py-2 mt-2"
-                    >
-                      {isExpanded ? "↑ Mostrar menos" : `↓ Ver todos (${catPosts.length} posts)`}
-                    </button>
-                  )}
-                </div>
-              );
-              })}
-            </div>
-          )}
-        </section>
       </main>
 
       {editingPost ? (

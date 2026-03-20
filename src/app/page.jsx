@@ -4,37 +4,7 @@ import PostCard from "../components/PostCard";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 import { getHomePosts } from "../lib/posts";
-
-const products = [
-  {
-    id: 1,
-    name: "Organizador de gaveta modular",
-    image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&q=80",
-    price: "49,90",
-    oldPrice: "79,90",
-  },
-  {
-    id: 2,
-    name: "Kit potes herméticos para cozinha",
-    image: "https://images.unsplash.com/photo-1610725664285-7c57e6eeac3f?w=300&q=80",
-    price: "69,90",
-    oldPrice: "99,90",
-  },
-  {
-    id: 3,
-    name: "Spray multiuso concentrado",
-    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=300&q=80",
-    price: "24,90",
-    oldPrice: "39,90",
-  },
-  {
-    id: 4,
-    name: "Cabide antideslizante (kit 20un)",
-    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&q=80",
-    price: "34,90",
-    oldPrice: "54,90",
-  },
-];
+import { getOfferProducts } from "../lib/products";
 
 const categories = [
   { label: "Cozinha", emoji: "🍳", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", id: "cozinha", href: "/cozinha" },
@@ -44,6 +14,7 @@ const categories = [
 
 export default async function Home() {
   const posts = await getHomePosts(3);
+  const products = await getOfferProducts(4);
 
   return (
     <div id="topo" className="bg-gray-50 min-h-screen scroll-smooth">

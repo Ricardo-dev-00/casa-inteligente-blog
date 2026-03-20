@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Header from "../../components/Header";
@@ -16,7 +16,34 @@ function slugify(input) {
     .replace(/-+/g, "-");
 }
 
-function EditModal({ post, adminPassword, onClose, onSaved }) {
+function ProductSelector({ allProducts, selectedProductIds, onToggle }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-semibold text-gray-700">Produtos do post (opcional)</p>
+      {allProducts.length === 0 ? (
+        <p className="text-xs text-gray-400">Nenhum produto carregado ainda.</p>
+      ) : (
+        <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50 space-y-2">
+          {allProducts.map((product) => {
+            const checked = selectedProductIds.includes(Number(product.id));
+            return (
+              <label key={product.id} className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => onToggle(Number(product.id))}
+                />
+                <span className="truncate">{product.name}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EditModal({ post, allProducts, adminPassword, onClose, onSaved }) {
   const [title, setTitle] = useState(post.title || "");
   const [slug, setSlug] = useState(post.slug || "");
   const [category, setCategory] = useState(post.category || "Organização");
@@ -24,10 +51,19 @@ function EditModal({ post, adminPassword, onClose, onSaved }) {
   const [content, setContent] = useState(post.content || "");
   const [coverImageUrl, setCoverImageUrl] = useState(post.cover_image_url || "");
   const [published, setPublished] = useState(Boolean(post.published));
+  const [selectedProductIds, setSelectedProductIds] = useState((post.productIds || []).map((id) => Number(id)));
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
   const slugPreview = useMemo(() => slugify(slug || title), [slug, title]);
+
+  function toggleProduct(productId) {
+    setSelectedProductIds((current) =>
+      current.includes(productId)
+        ? current.filter((id) => id !== productId)
+        : [...current, productId]
+    );
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -37,10 +73,24 @@ function EditModal({ post, adminPassword, onClose, onSaved }) {
       const res = await fetch("/api/admin/posts", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: post.id, title, slug, category, excerpt, content, coverImageUrl, published, adminPassword }),
+        body: JSON.stringify({
+          id: post.id,
+          title,
+          slug,
+          category,
+          excerpt,
+          content,
+          coverImageUrl,
+          published,
+          productIds: selectedProductIds,
+          adminPassword,
+        }),
       });
       const result = await res.json();
-      if (!res.ok) { setError(result?.error || "Erro ao salvar."); return; }
+      if (!res.ok) {
+        setError(result?.error || "Erro ao salvar.");
+        return;
+      }
       onSaved();
     } catch {
       setError("Erro de rede.");
@@ -92,6 +142,13 @@ function EditModal({ post, adminPassword, onClose, onSaved }) {
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
               placeholder="https://..." />
           </div>
+
+          <ProductSelector
+            allProducts={allProducts}
+            selectedProductIds={selectedProductIds}
+            onToggle={toggleProduct}
+          />
+
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
             Publicado
@@ -121,6 +178,8 @@ export default function PainelPage() {
   const [content, setContent] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [published, setPublished] = useState(true);
+  const [selectedProductIds, setSelectedProductIds] = useState([]);
+
   const [adminPassword, setAdminPassword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState("");
@@ -131,16 +190,71 @@ export default function PainelPage() {
   const [editingPost, setEditingPost] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productsError, setProductsError] = useState("");
+  const [productStatus, setProductStatus] = useState("");
+  const [editingProductId, setEditingProductId] = useState(null);
+  const [deletingProductId, setDeletingProductId] = useState(null);
+  const [confirmDeleteProductId, setConfirmDeleteProductId] = useState(null);
+
+  const [productName, setProductName] = useState("");
+  const [productSlug, setProductSlug] = useState("");
+  const [productCategory, setProductCategory] = useState("Organização");
+  const [productDescription, setProductDescription] = useState("");
+  const [productImageUrl, setProductImageUrl] = useState("");
+  const [productPrice, setProductPrice] = useState("");
+  const [productOldPrice, setProductOldPrice] = useState("");
+  const [productLink, setProductLink] = useState("");
+  const [productActive, setProductActive] = useState(true);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [sessionSaving, setSessionSaving] = useState(false);
   const [rememberDevice, setRememberDevice] = useState(true);
 
   const slugPreview = useMemo(() => slugify(slug || title), [slug, title]);
+  const productSlugPreview = useMemo(() => slugify(productSlug || productName), [productSlug, productName]);
 
   useEffect(() => {
     checkSession();
   }, []);
+
+  function clearProductForm() {
+    setEditingProductId(null);
+    setProductName("");
+    setProductSlug("");
+    setProductCategory("Organização");
+    setProductDescription("");
+    setProductImageUrl("");
+    setProductPrice("");
+    setProductOldPrice("");
+    setProductLink("");
+    setProductActive(true);
+  }
+
+  function togglePostProduct(productId) {
+    setSelectedProductIds((current) =>
+      current.includes(productId)
+        ? current.filter((id) => id !== productId)
+        : [...current, productId]
+    );
+  }
+
+  function startEditProduct(product) {
+    setEditingProductId(Number(product.id));
+    setProductName(product.name || "");
+    setProductSlug(product.slug || "");
+    setProductCategory(product.category || "Organização");
+    setProductDescription(product.description || "");
+    setProductImageUrl(product.image_url || "");
+    setProductPrice(product.price || "");
+    setProductOldPrice(product.old_price || "");
+    setProductLink(product.link || "");
+    setProductActive(product.active !== false);
+  }
 
   async function checkSession() {
     setSessionLoading(true);
@@ -153,6 +267,9 @@ export default function PainelPage() {
         return;
       }
       setSessionActive(Boolean(result?.authenticated));
+      if (result?.authenticated) {
+        await Promise.all([loadPosts(""), loadProducts("")]);
+      }
     } catch {
       setSessionActive(false);
     } finally {
@@ -187,6 +304,7 @@ export default function PainelPage() {
           ? "Sessao segura ativa e lembrada neste dispositivo (30 dias)."
           : "Sessao segura ativa neste navegador."
       );
+      await Promise.all([loadPosts(""), loadProducts("")]);
     } catch {
       setStatus("Erro de rede ao salvar a sessao.");
     } finally {
@@ -213,12 +331,35 @@ export default function PainelPage() {
       const query = password ? `?password=${encodeURIComponent(password)}` : "";
       const res = await fetch(`/api/admin/posts${query}`);
       const result = await res.json();
-      if (!res.ok) { setPostsError(result?.error || "Erro ao carregar posts."); return; }
-      setPosts(result.posts);
+      if (!res.ok) {
+        setPostsError(result?.error || "Erro ao carregar posts.");
+        return;
+      }
+      setPosts(result.posts || []);
     } catch {
       setPostsError("Erro de rede.");
     } finally {
       setLoadingPosts(false);
+    }
+  }
+
+  async function loadProducts(pwd) {
+    const password = pwd ?? adminPassword;
+    setLoadingProducts(true);
+    setProductsError("");
+    try {
+      const query = password ? `?password=${encodeURIComponent(password)}` : "";
+      const res = await fetch(`/api/admin/products${query}`);
+      const result = await res.json();
+      if (!res.ok) {
+        setProductsError(result?.error || "Erro ao carregar produtos.");
+        return;
+      }
+      setProducts(result.products || []);
+    } catch {
+      setProductsError("Erro de rede.");
+    } finally {
+      setLoadingProducts(false);
     }
   }
 
@@ -234,17 +375,82 @@ export default function PainelPage() {
       const response = await fetch("/api/admin/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, slug, category, excerpt, content, coverImageUrl, published, adminPassword }),
+        body: JSON.stringify({
+          title,
+          slug,
+          category,
+          excerpt,
+          content,
+          coverImageUrl,
+          published,
+          productIds: selectedProductIds,
+          adminPassword,
+        }),
       });
       const result = await response.json();
-      if (!response.ok) { setStatus(`Erro: ${result?.error || "nao foi possivel salvar"}`); return; }
+      if (!response.ok) {
+        setStatus(`Erro: ${result?.error || "nao foi possivel salvar"}`);
+        return;
+      }
       setStatus(`Post criado: /posts/${result.post.slug}`);
-      setTitle(""); setSlug(""); setExcerpt(""); setContent(""); setCoverImageUrl(""); setPublished(true);
+      setTitle("");
+      setSlug("");
+      setExcerpt("");
+      setContent("");
+      setCoverImageUrl("");
+      setPublished(true);
+      setSelectedProductIds([]);
       await loadPosts(adminPassword);
     } catch {
       setStatus("Erro de rede ao salvar.");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleSaveProduct(event) {
+    event.preventDefault();
+    if (!sessionActive && !adminPassword) {
+      setProductStatus("Digite a senha do painel ou ative a sessao segura.");
+      return;
+    }
+
+    setIsSavingProduct(true);
+    setProductStatus("");
+
+    try {
+      const method = editingProductId ? "PATCH" : "POST";
+      const response = await fetch("/api/admin/products", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingProductId,
+          name: productName,
+          slug: productSlug,
+          category: productCategory,
+          description: productDescription,
+          imageUrl: productImageUrl,
+          price: productPrice,
+          oldPrice: productOldPrice,
+          link: productLink,
+          active: productActive,
+          adminPassword,
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        setProductStatus(`Erro: ${result?.error || "nao foi possivel salvar o produto"}`);
+        return;
+      }
+
+      setProductStatus(editingProductId ? "Produto atualizado com sucesso." : "Produto criado com sucesso.");
+      clearProductForm();
+      await Promise.all([loadProducts(adminPassword), loadPosts(adminPassword)]);
+    } catch {
+      setProductStatus("Erro de rede ao salvar produto.");
+    } finally {
+      setIsSavingProduct(false);
     }
   }
 
@@ -258,12 +464,37 @@ export default function PainelPage() {
         body: JSON.stringify({ id: post.id, slug: post.slug, adminPassword }),
       });
       const result = await res.json();
-      if (!res.ok) { setPostsError(result?.error || "Erro ao excluir."); return; }
+      if (!res.ok) {
+        setPostsError(result?.error || "Erro ao excluir.");
+        return;
+      }
       await loadPosts(adminPassword);
     } catch {
       setPostsError("Erro de rede ao excluir.");
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  async function handleDeleteProduct(product) {
+    setDeletingProductId(product.id);
+    setConfirmDeleteProductId(null);
+    try {
+      const res = await fetch("/api/admin/products", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: product.id, adminPassword }),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        setProductsError(result?.error || "Erro ao excluir produto.");
+        return;
+      }
+      await Promise.all([loadProducts(adminPassword), loadPosts(adminPassword)]);
+    } catch {
+      setProductsError("Erro de rede ao excluir produto.");
+    } finally {
+      setDeletingProductId(null);
     }
   }
 
@@ -281,11 +512,10 @@ export default function PainelPage() {
     <div className="bg-gray-50 min-h-screen">
       <Header />
 
-      <main className="max-w-3xl mx-auto px-4 py-10 space-y-12">
-        {/* Criar post */}
+      <main className="max-w-4xl mx-auto px-4 py-10 space-y-12">
         <section>
           <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Painel CMS</h1>
-          <p className="text-gray-600 mb-8 text-center">Crie e publique posts</p>
+          <p className="text-gray-600 mb-8 text-center">Gerencie posts e produtos</p>
 
           <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm">
             <div>
@@ -362,6 +592,13 @@ export default function PainelPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400"
                 placeholder="https://..." />
             </div>
+
+            <ProductSelector
+              allProducts={products}
+              selectedProductIds={selectedProductIds}
+              onToggle={togglePostProduct}
+            />
+
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
               Publicar imediatamente
@@ -374,7 +611,106 @@ export default function PainelPage() {
           </form>
         </section>
 
-        {/* Lista de posts */}
+        <section className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="text-2xl font-bold text-gray-900">Produtos</h2>
+            <button onClick={() => loadProducts()} disabled={loadingProducts}
+              className="bg-gray-800 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-700 disabled:opacity-70">
+              {loadingProducts ? "Carregando..." : "Atualizar produtos"}
+            </button>
+          </div>
+
+          <form onSubmit={handleSaveProduct} className="grid md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Nome do produto</label>
+              <input value={productName} onChange={(e) => setProductName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" required />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Slug (opcional)</label>
+              <input value={productSlug} onChange={(e) => setProductSlug(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
+              <p className="text-xs text-gray-500 mt-1">Slug final: {productSlugPreview}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Categoria</label>
+              <select value={productCategory} onChange={(e) => setProductCategory(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900">
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Preco</label>
+              <input value={productPrice} onChange={(e) => setProductPrice(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" placeholder="49,90" required />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Preco antigo (opcional)</label>
+              <input value={productOldPrice} onChange={(e) => setProductOldPrice(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" placeholder="79,90" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Descricao (opcional)</label>
+              <textarea rows={2} value={productDescription} onChange={(e) => setProductDescription(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">URL da imagem</label>
+              <input type="url" value={productImageUrl} onChange={(e) => setProductImageUrl(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Link de oferta</label>
+              <input type="url" value={productLink} onChange={(e) => setProductLink(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" placeholder="https://..." />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-gray-700 md:col-span-2">
+              <input type="checkbox" checked={productActive} onChange={(e) => setProductActive(e.target.checked)} />
+              Produto ativo na aba de ofertas
+            </label>
+            <div className="md:col-span-2 flex gap-2">
+              <button type="submit" disabled={isSavingProduct} className="bg-blue-600 text-white rounded-lg px-5 py-2.5 font-semibold hover:bg-blue-700 disabled:opacity-70">
+                {isSavingProduct ? "Salvando..." : editingProductId ? "Salvar produto" : "Cadastrar produto"}
+              </button>
+              {editingProductId ? (
+                <button type="button" onClick={clearProductForm} className="bg-gray-100 text-gray-700 rounded-lg px-5 py-2.5 font-semibold hover:bg-gray-200">
+                  Cancelar edição
+                </button>
+              ) : null}
+            </div>
+          </form>
+
+          {productStatus ? <p className="text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">{productStatus}</p> : null}
+          {productsError ? <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{productsError}</p> : null}
+
+          <ul className="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100">
+            {products.map((product) => (
+              <li key={product.id} className="flex items-center justify-between px-4 py-3 gap-4">
+                <div className="flex-1 min-w-0">
+                  <p className="text-gray-900 font-medium truncate">{product.name}</p>
+                  <p className="text-xs text-gray-400 truncate">R$ {product.price} {product.old_price ? `| De: R$ ${product.old_price}` : ""}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${product.active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
+                    {product.active ? "Ativo" : "Inativo"}
+                  </span>
+                  <button onClick={() => startEditProduct(product)} className="text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-100">
+                    Editar
+                  </button>
+                  {confirmDeleteProductId === product.id ? (
+                    <>
+                      <button onClick={() => handleDeleteProduct(product)} disabled={deletingProductId === product.id}
+                        className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-70">
+                        {deletingProductId === product.id ? "..." : "Confirmar"}
+                      </button>
+                      <button onClick={() => setConfirmDeleteProductId(null)}
+                        className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg font-semibold hover:bg-gray-200">
+                        Cancelar
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => setConfirmDeleteProductId(product.id)} className="text-xs bg-red-50 text-red-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-red-100">
+                      Excluir
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-gray-900">Posts existentes</h2>
@@ -389,7 +725,7 @@ export default function PainelPage() {
           ) : null}
 
           {posts === null ? (
-            <p className="text-gray-400 text-sm">Clique em &quot;Carregar posts&quot; para listar (senha manual ou sessao segura).</p>
+            <p className="text-gray-400 text-sm">Clique em "Carregar posts" para listar (senha manual ou sessao segura).</p>
           ) : posts.length === 0 ? (
             <p className="text-gray-400 text-sm">Nenhum post encontrado.</p>
           ) : (
@@ -402,7 +738,7 @@ export default function PainelPage() {
                       <li key={post.id} className="flex items-center justify-between px-4 py-3 gap-4">
                         <div className="flex-1 min-w-0">
                           <p className="text-gray-900 font-medium truncate">{post.title}</p>
-                          <p className="text-xs text-gray-400 truncate">/posts/{post.slug}</p>
+                          <p className="text-xs text-gray-400 truncate">/posts/{post.slug} | Produtos: {(post.productIds || []).length}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${post.published ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
@@ -443,11 +779,16 @@ export default function PainelPage() {
       {editingPost ? (
         <EditModal
           post={editingPost}
+          allProducts={products.map((p) => ({ id: p.id, name: p.name }))}
           adminPassword={adminPassword}
           onClose={() => setEditingPost(null)}
-          onSaved={async () => { setEditingPost(null); await loadPosts(adminPassword); }}
+          onSaved={async () => {
+            setEditingPost(null);
+            await loadPosts(adminPassword);
+          }}
         />
       ) : null}
     </div>
   );
 }
+

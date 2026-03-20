@@ -4,6 +4,7 @@ import {
   getPostBySlug as getLocalPostBySlug,
   getRelatedPosts as getLocalRelatedPosts,
 } from "../data/posts";
+import { getProductsByIds } from "./products";
 
 function formatDatePtBr(dateValue) {
   if (!dateValue) return "";
@@ -124,6 +125,17 @@ export async function getPostBySlugData(slug) {
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
 
+  let dbProducts = [];
+  const { data: relationRows } = await supabase
+    .from("post_products")
+    .select("product_id")
+    .eq("post_id", data.id);
+
+  const productIds = (relationRows || []).map((row) => Number(row.product_id)).filter((id) => Number.isFinite(id));
+  if (productIds.length > 0) {
+    dbProducts = await getProductsByIds(productIds);
+  }
+
   return {
     ...localPost,
     id: data.id,
@@ -135,7 +147,7 @@ export async function getPostBySlugData(slug) {
     date: formatDatePtBr(data.created_at),
     image: data.cover_image_url || localPost?.image || "",
     intro: introFromDb.length ? introFromDb : localPost?.intro || [],
-    products: localPost?.products || [],
+    products: dbProducts.length ? dbProducts : localPost?.products || [],
     relatedSlugs: localPost?.relatedSlugs || [],
   };
 }

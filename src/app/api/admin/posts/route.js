@@ -27,6 +27,58 @@ function checkAuth(request, password) {
   return { error: result.error, status: result.status };
 }
 
+function normalizeProductIds(productIds) {
+  return Array.from(
+    new Set(
+      (Array.isArray(productIds) ? productIds : [])
+        .map((id) => Number(id))
+        .filter((id) => Number.isFinite(id))
+    )
+  );
+}
+
+async function getPostProductMap(supabase, postIds) {
+  if (!Array.isArray(postIds) || postIds.length === 0) return new Map();
+
+  const { data, error } = await supabase
+    .from("post_products")
+    .select("post_id, product_id")
+    .in("post_id", postIds);
+
+  if (error || !data?.length) return new Map();
+
+  const map = new Map();
+  for (const row of data) {
+    const key = row.post_id;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(row.product_id);
+  }
+  return map;
+}
+
+async function savePostProducts(supabase, postId, productIds) {
+  const normalized = normalizeProductIds(productIds);
+
+  const { error: deleteError } = await supabase
+    .from("post_products")
+    .delete()
+    .eq("post_id", postId);
+
+  if (deleteError) {
+    return { ok: false, error: deleteError.message };
+  }
+
+  if (!normalized.length) return { ok: true };
+
+  const payload = normalized.map((productId) => ({ post_id: postId, product_id: productId }));
+  const { error: insertError } = await supabase.from("post_products").insert(payload);
+  if (insertError) {
+    return { ok: false, error: insertError.message };
+  }
+
+  return { ok: true };
+}
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -44,7 +96,14 @@ export async function GET(request) {
 
     if (error) return Response.json({ error: error.message }, { status: 400 });
 
-    return Response.json({ posts: data });
+    const postIds = (data || []).map((post) => post.id);
+    const productsMap = await getPostProductMap(supabase, postIds);
+    const postsWithProducts = (data || []).map((post) => ({
+      ...post,
+      productIds: productsMap.get(post.id) || [],
+    }));
+
+    return Response.json({ posts: postsWithProducts });
   } catch {
     return Response.json({ error: "Falha ao processar requisicao." }, { status: 500 });
   }
@@ -66,6 +125,7 @@ export async function PATCH(request) {
     const coverImageUrl = (body?.coverImageUrl || "").trim();
     const published = Boolean(body?.published);
     const requestedSlug = (body?.slug || "").trim();
+    const productIds = normalizeProductIds(body?.productIds);
 
     if (!title || !category || !excerpt || !content) {
       return Response.json({ error: "Preencha titulo, categoria, resumo e conteudo." }, { status: 400 });
@@ -84,8 +144,11 @@ export async function PATCH(request) {
 
     if (error) return Response.json({ error: error.message }, { status: 400 });
 
+    const relationResult = await savePostProducts(supabase, id, productIds);
+    if (!relationResult.ok) return Response.json({ error: relationResult.error }, { status: 400 });
+
     revalidateAll(slug);
-    return Response.json({ success: true, post: data });
+    return Response.json({ success: true, post: { ...data, productIds } });
   } catch {
     return Response.json({ error: "Falha ao processar requisicao." }, { status: 500 });
   }
@@ -102,6 +165,8 @@ export async function DELETE(request) {
 
     const supabase = getSupabaseAdminClient();
     if (!supabase) return Response.json({ error: "SUPABASE_SERVICE_ROLE_KEY nao configurada." }, { status: 500 });
+
+    await supabase.from("post_products").delete().eq("post_id", id);
 
     const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) return Response.json({ error: error.message }, { status: 400 });
@@ -127,6 +192,7 @@ export async function POST(request) {
     const coverImageUrl = (body?.coverImageUrl || "").trim();
     const published = Boolean(body?.published);
     const requestedSlug = (body?.slug || "").trim();
+    const productIds = normalizeProductIds(body?.productIds);
 
     if (!title || !category || !excerpt || !content) {
       return Response.json(
@@ -168,8 +234,11 @@ export async function POST(request) {
       return Response.json({ error: error.message }, { status: 400 });
     }
 
+    const relationResult = await savePostProducts(supabase, data.id, productIds);
+    if (!relationResult.ok) return Response.json({ error: relationResult.error }, { status: 400 });
+
     revalidateAll(slug);
-    return Response.json({ success: true, post: data }, { status: 201 });
+    return Response.json({ success: true, post: { ...data, productIds } }, { status: 201 });
   } catch {
     return Response.json({ error: "Falha ao processar requisicao." }, { status: 500 });
   }

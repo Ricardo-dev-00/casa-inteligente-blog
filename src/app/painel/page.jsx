@@ -210,6 +210,9 @@ export default function PainelPage() {
   const [productActive, setProductActive] = useState(true);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
 
+  const [expandedProducts, setExpandedProducts] = useState(false);
+  const [expandedPostsCategory, setExpandedPostsCategory] = useState(new Set());
+
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [sessionSaving, setSessionSaving] = useState(false);
@@ -547,7 +550,7 @@ export default function PainelPage() {
                     <button
                       type="button"
                       onClick={handleLogoutSession}
-                      className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-gray-200"
+                      className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-red-600"
                     >
                       Encerrar sessao
                     </button>
@@ -676,7 +679,7 @@ export default function PainelPage() {
           {productsError ? <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{productsError}</p> : null}
 
           <ul className="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100">
-            {products.map((product) => (
+            {products.slice(expandedProducts ? 0 : -3).map((product) => (
               <li key={product.id} className="flex items-center justify-between px-4 py-3 gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="text-gray-900 font-medium truncate">{product.name}</p>
@@ -709,6 +712,14 @@ export default function PainelPage() {
               </li>
             ))}
           </ul>
+          {products.length > 3 && (
+            <button
+              onClick={() => setExpandedProducts(!expandedProducts)}
+              className="w-full mt-4 text-center text-sm font-semibold text-blue-600 hover:text-blue-700 py-2"
+            >
+              {expandedProducts ? "↑ Mostrar menos" : `↓ Ver todos (${products.length} produtos)`}
+            </button>
+          )}
         </section>
 
         <section>
@@ -730,11 +741,14 @@ export default function PainelPage() {
             <p className="text-gray-400 text-sm">Nenhum post encontrado.</p>
           ) : (
             <div className="space-y-6">
-              {Object.entries(postsByCategory).map(([cat, catPosts]) => (
+              {Object.entries(postsByCategory).map(([cat, catPosts]) => {
+                const isExpanded = expandedPostsCategory.has(cat);
+                const displayedPosts = isExpanded ? catPosts : catPosts.slice(-3);
+                return (
                 <div key={cat}>
                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{cat}</h3>
                   <ul className="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100">
-                    {catPosts.map((post) => (
+                    {displayedPosts.map((post) => (
                       <li key={post.id} className="flex items-center justify-between px-4 py-3 gap-4">
                         <div className="flex-1 min-w-0">
                           <p className="text-gray-900 font-medium truncate">{post.title}</p>
@@ -769,8 +783,25 @@ export default function PainelPage() {
                       </li>
                     ))}
                   </ul>
+                  {catPosts.length > 3 && (
+                    <button
+                      onClick={() => {
+                        const newSet = new Set(expandedPostsCategory);
+                        if (isExpanded) {
+                          newSet.delete(cat);
+                        } else {
+                          newSet.add(cat);
+                        }
+                        setExpandedPostsCategory(newSet);
+                      }}
+                      className="w-full text-center text-sm font-semibold text-blue-600 hover:text-blue-700 py-2 mt-2"
+                    >
+                      {isExpanded ? "↑ Mostrar menos" : `↓ Ver todos (${catPosts.length} posts)`}
+                    </button>
+                  )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
         </section>

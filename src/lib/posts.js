@@ -6,6 +6,8 @@ import {
 } from "../data/posts";
 import { getProductsByIds } from "./products";
 
+const CONTENT_BLOCKS_PREFIX = "[[CI_BLOCKS_V1]]";
+
 function formatDatePtBr(dateValue) {
   if (!dateValue) return "";
 
@@ -45,6 +47,26 @@ function mapDbRowToPostCard(row) {
     category: row.category || "",
     date: formatDatePtBr(row.created_at),
   };
+}
+
+function getProductIdsFromContent(content) {
+  const raw = String(content || "").trim();
+  if (!raw.startsWith(CONTENT_BLOCKS_PREFIX)) return [];
+
+  try {
+    const parsed = JSON.parse(raw.slice(CONTENT_BLOCKS_PREFIX.length).trim());
+    if (!Array.isArray(parsed)) return [];
+
+    const ids = parsed
+      .filter((block) => block?.type === "products")
+      .flatMap((block) => (Array.isArray(block?.productIds) ? block.productIds : []))
+      .map((id) => Number(id))
+      .filter((id) => Number.isFinite(id));
+
+    return Array.from(new Set(ids));
+  } catch {
+    return [];
+  }
 }
 
 export async function getHomePosts(limit = 3) {
@@ -134,8 +156,11 @@ export async function getPostBySlugData(slug) {
     .eq("post_id", data.id);
 
   const productIds = (relationRows || []).map((row) => Number(row.product_id)).filter((id) => Number.isFinite(id));
-  if (productIds.length > 0) {
-    dbProducts = await getProductsByIds(productIds);
+  const contentProductIds = getProductIdsFromContent(data.content);
+  const allProductIds = Array.from(new Set([...productIds, ...contentProductIds]));
+
+  if (allProductIds.length > 0) {
+    dbProducts = await getProductsByIds(allProductIds);
   }
 
   return {

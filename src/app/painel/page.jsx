@@ -21,8 +21,16 @@ function createTextBlock(text = "") {
   return { id: `text-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, type: "text", text };
 }
 
-function createProductsBlock(title = "Produtos recomendados") {
-  return { id: `products-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, type: "products", title };
+function createProductsBlock(title = "Produtos recomendados", productIds = []) {
+  return {
+    id: `products-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    type: "products",
+    title,
+    productIds: (Array.isArray(productIds) ? productIds : [])
+      .map((id) => Number(id))
+      .filter((id) => Number.isFinite(id))
+      .slice(0, 3),
+  };
 }
 
 function parseContentToBlocks(content) {
@@ -37,7 +45,7 @@ function parseContentToBlocks(content) {
         const blocks = parsed
           .map((block) => {
             if (block?.type === "products") {
-              return createProductsBlock(block?.title || "Produtos recomendados");
+              return createProductsBlock(block?.title || "Produtos recomendados", block?.productIds || []);
             }
             return createTextBlock(block?.text || "");
           })
@@ -56,7 +64,14 @@ function serializeBlocksToContent(blocks) {
   const normalized = (Array.isArray(blocks) ? blocks : [])
     .map((block) => {
       if (block?.type === "products") {
-        return { type: "products", title: String(block?.title || "Produtos recomendados").trim() || "Produtos recomendados" };
+        return {
+          type: "products",
+          title: String(block?.title || "Produtos recomendados").trim() || "Produtos recomendados",
+          productIds: (Array.isArray(block?.productIds) ? block.productIds : [])
+            .map((id) => Number(id))
+            .filter((id) => Number.isFinite(id))
+            .slice(0, 3),
+        };
       }
       const text = String(block?.text || "").trim();
       if (!text) return null;
@@ -127,7 +142,7 @@ function ProductSelector({ allProducts, selectedProductIds, onToggle }) {
   );
 }
 
-function ContentBlocksEditor({ blocks, setBlocks, selectedProductCount }) {
+function ContentBlocksEditor({ blocks, setBlocks, allProducts }) {
   function updateBlock(blockId, patch) {
     setBlocks((current) => current.map((block) => (block.id === blockId ? { ...block, ...patch } : block)));
   }
@@ -150,6 +165,25 @@ function ContentBlocksEditor({ blocks, setBlocks, selectedProductCount }) {
       next.splice(target, 0, moved);
       return next;
     });
+  }
+
+  function toggleBlockProduct(blockId, productId) {
+    setBlocks((current) =>
+      current.map((block) => {
+        if (block.id !== blockId || block.type !== "products") return block;
+
+        const selected = Array.isArray(block.productIds) ? block.productIds : [];
+        const normalized = Number(productId);
+        if (!Number.isFinite(normalized)) return block;
+
+        if (selected.includes(normalized)) {
+          return { ...block, productIds: selected.filter((id) => id !== normalized) };
+        }
+
+        if (selected.length >= 3) return block;
+        return { ...block, productIds: [...selected, normalized] };
+      })
+    );
   }
 
   return (
@@ -219,9 +253,32 @@ function ContentBlocksEditor({ blocks, setBlocks, selectedProductCount }) {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white"
                   placeholder="Produtos recomendados"
                 />
-                <p className="text-xs text-gray-500">
-                  Esta sessao usa os produtos escolhidos em "Produtos do post (opcional)". Selecionados: {selectedProductCount}.
-                </p>
+                <p className="text-xs text-gray-500">Selecione ate 3 produtos para esta sessao (pode usar 1, 2 ou 3).</p>
+                {allProducts.length === 0 ? (
+                  <p className="text-xs text-gray-400">Nenhum produto cadastrado ainda.</p>
+                ) : (
+                  <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50 space-y-2">
+                    {allProducts.map((product) => {
+                      const selected = Array.isArray(block.productIds) ? block.productIds : [];
+                      const productId = Number(product.id);
+                      const checked = selected.includes(productId);
+                      const disableNewSelect = !checked && selected.length >= 3;
+
+                      return (
+                        <label key={`${block.id}-${product.id}`} className={`flex items-center gap-2 text-sm ${disableNewSelect ? "text-gray-400" : "text-gray-700"}`}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            disabled={disableNewSelect}
+                            onChange={() => toggleBlockProduct(block.id, productId)}
+                          />
+                          <span className="truncate">{product.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">Selecionados neste bloco: {(block.productIds || []).length}/3</p>
               </div>
             ) : (
               <div>
@@ -338,7 +395,7 @@ function EditModal({ post, allProducts, adminPassword, onClose, onSaved }) {
           <ContentBlocksEditor
             blocks={contentBlocks}
             setBlocks={setContentBlocks}
-            selectedProductCount={selectedProductIds.length}
+            allProducts={allProducts}
           />
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">URL da imagem de capa (opcional)</label>
@@ -802,7 +859,7 @@ export default function PainelPage() {
             <ContentBlocksEditor
               blocks={contentBlocks}
               setBlocks={setContentBlocks}
-              selectedProductCount={selectedProductIds.length}
+              allProducts={products}
             />
             <div>
               <label htmlFor="coverImageUrl" className="block text-sm font-semibold text-gray-700 mb-1">URL da imagem de capa (opcional)</label>

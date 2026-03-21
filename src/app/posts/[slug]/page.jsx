@@ -87,6 +87,10 @@ function parseContentBlocks(rawContent) {
           return {
             type: "products",
             title: String(block?.title || "Produtos recomendados").trim() || "Produtos recomendados",
+            productIds: (Array.isArray(block?.productIds) ? block.productIds : [])
+              .map((id) => Number(id))
+              .filter((id) => Number.isFinite(id))
+              .slice(0, 3),
           };
         }
 
@@ -126,6 +130,7 @@ export default async function PostPage({ params }) {
   const siteUrl = getSiteUrl();
   const postUrl = `${siteUrl}/posts/${post.slug}`;
   const renderBlocks = getRenderBlocks(post);
+  const productsById = new Map((post.products || []).map((product) => [Number(product.id), product]));
   const hasProductBlock = renderBlocks.some((block) => block.type === "products") && post.products?.length > 0;
   const articleJsonLd = {
     "@context": "https://schema.org",
@@ -191,14 +196,29 @@ export default async function PostPage({ params }) {
         <div className="space-y-8 mb-10">
           {renderBlocks.map((block, index) => {
             if (block.type === "products") {
-              if (!post.products || post.products.length === 0) return null;
+              const blockProducts = Array.isArray(block.productIds) && block.productIds.length > 0
+                ? block.productIds
+                    .map((id) => productsById.get(Number(id)))
+                    .filter(Boolean)
+                    .slice(0, 3)
+                : (post.products || []).slice(0, 3);
+
+              if (blockProducts.length === 0) return null;
+
+              const gridClassName =
+                blockProducts.length === 1
+                  ? "grid gap-4 max-w-sm"
+                  : blockProducts.length === 2
+                    ? "grid gap-4 sm:grid-cols-2"
+                    : "grid gap-4 sm:grid-cols-2 lg:grid-cols-3";
+
               return (
                 <section key={`products-${index}`} className="space-y-6">
                   <h2 className="text-xl font-bold text-gray-900 border-l-4 border-green-500 pl-3">
                     {block.title || "Produtos recomendados"}
                   </h2>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {post.products.map((product) => (
+                  <div className={gridClassName}>
+                    {blockProducts.map((product) => (
                       <ProductCard
                         key={`${index}-${product.id}`}
                         name={product.name}

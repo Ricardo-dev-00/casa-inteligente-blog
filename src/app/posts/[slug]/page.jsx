@@ -2,11 +2,14 @@ import { notFound } from "next/navigation";
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
 import PostCard from "../../../components/PostCard";
+import ProductCard from "../../../components/ProductCard";
 import {
   getAllPostSlugs,
   getPostBySlugData,
   getRelatedPostsData,
 } from "../../../lib/posts";
+
+const CONTENT_BLOCKS_PREFIX = "[[CI_BLOCKS_V1]]";
 
 function getSiteUrl() {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
@@ -69,6 +72,50 @@ function renderBold(text) {
   });
 }
 
+function parseContentBlocks(rawContent) {
+  const raw = String(rawContent || "").trim();
+  if (!raw || !raw.startsWith(CONTENT_BLOCKS_PREFIX)) return [];
+
+  const json = raw.slice(CONTENT_BLOCKS_PREFIX.length).trim();
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed
+      .map((block) => {
+        if (block?.type === "products") {
+          return {
+            type: "products",
+            title: String(block?.title || "Produtos recomendados").trim() || "Produtos recomendados",
+          };
+        }
+
+        const text = String(block?.text || "").trim();
+        if (!text) return null;
+        return { type: "text", text };
+      })
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function getRenderBlocks(post) {
+  const structuredBlocks = parseContentBlocks(post?.content);
+  if (structuredBlocks.length > 0) return structuredBlocks;
+
+  const legacyTextBlocks = (post?.intro || [])
+    .map((paragraph) => String(paragraph || "").trim())
+    .filter(Boolean)
+    .map((text) => ({ type: "text", text }));
+
+  if (post?.products?.length) {
+    return [...legacyTextBlocks, { type: "products", title: "Produtos recomendados" }];
+  }
+
+  return legacyTextBlocks;
+}
+
 export default async function PostPage({ params }) {
   const { slug } = await params;
   const post = await getPostBySlugData(slug);
@@ -78,6 +125,8 @@ export default async function PostPage({ params }) {
   const relatedPosts = await getRelatedPostsData(post.relatedSlugs || [], post.category);
   const siteUrl = getSiteUrl();
   const postUrl = `${siteUrl}/posts/${post.slug}`;
+  const renderBlocks = getRenderBlocks(post);
+  const hasProductBlock = renderBlocks.some((block) => block.type === "products") && post.products?.length > 0;
   const articleJsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -139,87 +188,52 @@ export default async function PostPage({ params }) {
           />
         </div>
 
-        {/* INTRO */}
-        <div className="space-y-4 mb-10">
-          {post.intro.map((paragraph, i) => (
-            <p key={i} className="text-gray-600 leading-relaxed text-base">
-              {renderBold(paragraph)}
-            </p>
-          ))}
+        <div className="space-y-8 mb-10">
+          {renderBlocks.map((block, index) => {
+            if (block.type === "products") {
+              if (!post.products || post.products.length === 0) return null;
+              return (
+                <section key={`products-${index}`} className="space-y-6">
+                  <h2 className="text-xl font-bold text-gray-900 border-l-4 border-green-500 pl-3">
+                    {block.title || "Produtos recomendados"}
+                  </h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {post.products.map((product) => (
+                      <ProductCard
+                        key={`${index}-${product.id}`}
+                        name={product.name}
+                        image={product.image}
+                        imageAlt={product.imageAlt}
+                        price={product.price}
+                        oldPrice={product.oldPrice}
+                        link={product.link}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            }
+
+            return (
+              <p key={`text-${index}`} className="text-gray-600 leading-relaxed text-base whitespace-pre-line">
+                {renderBold(block.text)}
+              </p>
+            );
+          })}
         </div>
 
-        {/* PRODUTOS */}
-        {post.products && post.products.length > 0 && (
-          <section className="space-y-6 mb-12">
-            <h2 className="text-xl font-bold text-gray-900 border-l-4 border-green-500 pl-3">
-              Produtos recomendados
-            </h2>
-
-            {post.products.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-2xl shadow p-6 flex flex-col sm:flex-row gap-4 sm:items-center hover:shadow-xl hover:-translate-y-1 transition relative"
-              >
-                <span className="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                  🔥 Oferta
-                </span>
-
-                {/* IMAGEM */}
-                <div className="shrink-0 mt-6 sm:mt-0">
-                  <img
-                    src={product.image}
-                    alt={product.imageAlt || product.name}
-                    className="w-full sm:w-32 h-32 object-cover rounded-xl"
-                  />
-                </div>
-
-                {/* INFO */}
-                <div className="flex flex-col justify-between flex-1">
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-800 mb-1 leading-snug">
-                      {product.name}
-                    </h3>
-                    <p className="text-gray-500 text-sm mb-3 leading-relaxed">
-                      {product.description}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div>
-                      <span className="line-through text-gray-400 text-sm mr-2">
-                        R$ {product.oldPrice}
-                      </span>
-                      <span className="text-green-600 font-bold text-lg">
-                        R$ {product.price}
-                      </span>
-                    </div>
-
-                    <a
-                      href={product.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 hover:scale-105 transition font-semibold whitespace-nowrap"
-                    >
-                      Ver preco atualizado
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            <div className="mt-10 text-center">
-              <p className="text-gray-600 mb-4">
-                Quer ver mais produtos úteis para sua casa?
-              </p>
-
-              <a
-                href="/ofertas"
-                className="inline-block bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 hover:scale-105 transition font-semibold shadow"
-              >
-                🔥 Ver mais ofertas
-              </a>
-            </div>
-          </section>
+        {hasProductBlock && (
+          <div className="mt-10 text-center mb-12">
+            <p className="text-gray-600 mb-4">
+              Quer ver mais produtos úteis para sua casa?
+            </p>
+            <a
+              href="/ofertas"
+              className="inline-block bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 hover:scale-105 transition font-semibold shadow"
+            >
+              🔥 Ver mais ofertas
+            </a>
+          </div>
         )}
 
         {/* POSTS RELACIONADOS */}

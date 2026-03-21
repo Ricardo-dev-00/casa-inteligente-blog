@@ -143,6 +143,7 @@ export async function getPostBySlugData(slug) {
     id: data.id,
     slug: data.slug,
     title: data.title,
+    content: data.content || "",
     excerpt: data.excerpt || localPost?.excerpt || "",
     category: data.category || localPost?.category || "",
     categoryHref: getCategoryHref(data.category || localPost?.category),

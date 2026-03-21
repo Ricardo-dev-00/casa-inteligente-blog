@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Header from "../../components/Header";
 
 const CATEGORIES = ["Cozinha", "Organização", "Limpeza", "Receitas"];
+const CONTENT_BLOCKS_PREFIX = "[[CI_BLOCKS_V1]]";
 
 function slugify(input) {
   return input
@@ -14,6 +15,57 @@ function slugify(input) {
     .trim()
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
+}
+
+function createTextBlock(text = "") {
+  return { id: `text-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, type: "text", text };
+}
+
+function createProductsBlock(title = "Produtos recomendados") {
+  return { id: `products-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, type: "products", title };
+}
+
+function parseContentToBlocks(content) {
+  const raw = String(content || "").trim();
+  if (!raw) return [createTextBlock("")];
+
+  if (raw.startsWith(CONTENT_BLOCKS_PREFIX)) {
+    const json = raw.slice(CONTENT_BLOCKS_PREFIX.length).trim();
+    try {
+      const parsed = JSON.parse(json);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const blocks = parsed
+          .map((block) => {
+            if (block?.type === "products") {
+              return createProductsBlock(block?.title || "Produtos recomendados");
+            }
+            return createTextBlock(block?.text || "");
+          })
+          .filter(Boolean);
+        if (blocks.length > 0) return blocks;
+      }
+    } catch {
+      return [createTextBlock(raw)];
+    }
+  }
+
+  return [createTextBlock(raw)];
+}
+
+function serializeBlocksToContent(blocks) {
+  const normalized = (Array.isArray(blocks) ? blocks : [])
+    .map((block) => {
+      if (block?.type === "products") {
+        return { type: "products", title: String(block?.title || "Produtos recomendados").trim() || "Produtos recomendados" };
+      }
+      const text = String(block?.text || "").trim();
+      if (!text) return null;
+      return { type: "text", text };
+    })
+    .filter(Boolean);
+
+  if (!normalized.length) return "";
+  return `${CONTENT_BLOCKS_PREFIX}${JSON.stringify(normalized)}`;
 }
 
 function getCreatedTimestamp(item) {
@@ -75,12 +127,128 @@ function ProductSelector({ allProducts, selectedProductIds, onToggle }) {
   );
 }
 
+function ContentBlocksEditor({ blocks, setBlocks, selectedProductCount }) {
+  function updateBlock(blockId, patch) {
+    setBlocks((current) => current.map((block) => (block.id === blockId ? { ...block, ...patch } : block)));
+  }
+
+  function removeBlock(blockId) {
+    setBlocks((current) => {
+      const next = current.filter((block) => block.id !== blockId);
+      return next.length > 0 ? next : [createTextBlock("")];
+    });
+  }
+
+  function moveBlock(blockId, direction) {
+    setBlocks((current) => {
+      const index = current.findIndex((block) => block.id === blockId);
+      if (index < 0) return current;
+      const target = direction === "up" ? index - 1 : index + 1;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      const [moved] = next.splice(index, 1);
+      next.splice(target, 0, moved);
+      return next;
+    });
+  }
+
+  return (
+    <div className="space-y-3 border border-gray-200 rounded-xl p-4 bg-gray-50">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold text-gray-700">Estrutura do post</p>
+          <p className="text-xs text-gray-500">Adicione blocos de texto e secoes de produtos na ordem que desejar.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setBlocks((current) => [...current, createTextBlock("")])}
+            className="text-xs bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-gray-100"
+          >
+            + Texto
+          </button>
+          <button
+            type="button"
+            onClick={() => setBlocks((current) => [...current, createProductsBlock()])}
+            className="text-xs bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-gray-100"
+          >
+            + Sessao de produtos
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {blocks.map((block, index) => (
+          <div key={block.id} className="bg-white border border-gray-200 rounded-lg p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Bloco {index + 1}: {block.type === "products" ? "Sessao de produtos" : "Texto"}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => moveBlock(block.id, "up")}
+                  className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveBlock(block.id, "down")}
+                  className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeBlock(block.id)}
+                  className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded hover:bg-red-100"
+                >
+                  Remover
+                </button>
+              </div>
+            </div>
+
+            {block.type === "products" ? (
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">Titulo da sessao de produtos</label>
+                <input
+                  type="text"
+                  value={block.title || ""}
+                  onChange={(e) => updateBlock(block.id, { title: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white"
+                  placeholder="Produtos recomendados"
+                />
+                <p className="text-xs text-gray-500">
+                  Esta sessao usa os produtos escolhidos em "Produtos do post (opcional)". Selecionados: {selectedProductCount}.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Texto</label>
+                <textarea
+                  rows={6}
+                  value={block.text || ""}
+                  onChange={(e) => updateBlock(block.id, { text: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white"
+                  placeholder="Escreva o texto deste bloco..."
+                />
+                <p className="text-xs text-gray-500 mt-1">Use <code className="bg-gray-100 px-1 rounded">**texto**</code> para negrito.</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function EditModal({ post, allProducts, adminPassword, onClose, onSaved }) {
   const [title, setTitle] = useState(post.title || "");
   const [slug, setSlug] = useState(post.slug || "");
   const [category, setCategory] = useState(post.category || "Organização");
   const [excerpt, setExcerpt] = useState(post.excerpt || "");
-  const [content, setContent] = useState(post.content || "");
+  const [contentBlocks, setContentBlocks] = useState(() => parseContentToBlocks(post.content || ""));
   const [coverImageUrl, setCoverImageUrl] = useState(post.cover_image_url || "");
   const [coverImageAlt, setCoverImageAlt] = useState(post.cover_image_alt || "");
   const [published, setPublished] = useState(Boolean(post.published));
@@ -102,6 +270,8 @@ function EditModal({ post, allProducts, adminPassword, onClose, onSaved }) {
     e.preventDefault();
     setIsSaving(true);
     setError("");
+    const content = serializeBlocksToContent(contentBlocks);
+
     try {
       const res = await fetch("/api/admin/posts", {
         method: "PATCH",
@@ -165,11 +335,11 @@ function EditModal({ post, allProducts, adminPassword, onClose, onSaved }) {
             <textarea rows={3} value={excerpt} onChange={(e) => setExcerpt(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white" required />
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Conteudo</label>
-            <textarea rows={8} value={content} onChange={(e) => setContent(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white" required />
-          </div>
+          <ContentBlocksEditor
+            blocks={contentBlocks}
+            setBlocks={setContentBlocks}
+            selectedProductCount={selectedProductIds.length}
+          />
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">URL da imagem de capa (opcional)</label>
             <input type="url" value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)}
@@ -215,7 +385,7 @@ export default function PainelPage() {
   const [slug, setSlug] = useState("");
   const [category, setCategory] = useState("Organização");
   const [excerpt, setExcerpt] = useState("");
-  const [content, setContent] = useState("");
+  const [contentBlocks, setContentBlocks] = useState([createTextBlock("")]);
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [coverImageAlt, setCoverImageAlt] = useState("");
   const [published, setPublished] = useState(true);
@@ -425,6 +595,8 @@ export default function PainelPage() {
     }
     setIsSaving(true);
     setStatus("");
+    const content = serializeBlocksToContent(contentBlocks);
+
     try {
       const response = await fetch("/api/admin/posts", {
         method: "POST",
@@ -451,7 +623,7 @@ export default function PainelPage() {
       setTitle("");
       setSlug("");
       setExcerpt("");
-      setContent("");
+      setContentBlocks([createTextBlock("")]);
       setCoverImageUrl("");
       setCoverImageAlt("");
       setPublished(true);
@@ -627,12 +799,11 @@ export default function PainelPage() {
               <textarea id="excerpt" rows={3} value={excerpt} onChange={(e) => setExcerpt(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400" required />
             </div>
-            <div>
-              <label htmlFor="content" className="block text-sm font-semibold text-gray-700 mb-1">Conteudo</label>
-              <p className="text-xs text-gray-400 mb-1">Use <code className="bg-gray-100 px-1 rounded">**texto**</code> para <strong>negrito</strong>. Separe paragrafos com uma linha em branco.</p>
-              <textarea id="content" rows={8} value={content} onChange={(e) => setContent(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-white placeholder:text-gray-400" required />
-            </div>
+            <ContentBlocksEditor
+              blocks={contentBlocks}
+              setBlocks={setContentBlocks}
+              selectedProductCount={selectedProductIds.length}
+            />
             <div>
               <label htmlFor="coverImageUrl" className="block text-sm font-semibold text-gray-700 mb-1">URL da imagem de capa (opcional)</label>
               <input id="coverImageUrl" type="url" value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)}

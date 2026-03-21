@@ -16,6 +16,38 @@ function slugify(input) {
     .replace(/-+/g, "-");
 }
 
+function getCreatedTimestamp(item) {
+  const candidates = [item?.created_at, item?.createdAt, item?.date];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const time = new Date(candidate).getTime();
+    if (Number.isFinite(time)) return time;
+  }
+  return null;
+}
+
+function sortByNewest(items) {
+  return [...items].sort((a, b) => {
+    const timeA = getCreatedTimestamp(a);
+    const timeB = getCreatedTimestamp(b);
+
+    if (timeA !== null && timeB !== null && timeA !== timeB) {
+      return timeB - timeA;
+    }
+
+    if (timeA !== null && timeB === null) return -1;
+    if (timeA === null && timeB !== null) return 1;
+
+    const idA = Number(a?.id);
+    const idB = Number(b?.id);
+    if (Number.isFinite(idA) && Number.isFinite(idB) && idA !== idB) {
+      return idB - idA;
+    }
+
+    return 0;
+  });
+}
+
 function ProductSelector({ allProducts, selectedProductIds, onToggle }) {
   return (
     <div className="space-y-2">
@@ -229,6 +261,16 @@ export default function PainelPage() {
 
   const slugPreview = useMemo(() => slugify(slug || title), [slug, title]);
   const productSlugPreview = useMemo(() => slugify(productSlug || productName), [productSlug, productName]);
+  const sortedPosts = useMemo(() => (Array.isArray(posts) ? sortByNewest(posts) : []), [posts]);
+  const sortedProducts = useMemo(() => sortByNewest(products), [products]);
+  const visiblePosts = useMemo(
+    () => (expandedPosts ? sortedPosts : sortedPosts.slice(0, 3)),
+    [expandedPosts, sortedPosts]
+  );
+  const visibleProducts = useMemo(
+    () => (expandedProducts ? sortedProducts : sortedProducts.slice(0, 3)),
+    [expandedProducts, sortedProducts]
+  );
 
   useEffect(() => {
     checkSession();
@@ -642,7 +684,7 @@ export default function PainelPage() {
           ) : (
             <>
               <ul className="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100">
-                {posts.slice(expandedPosts ? 0 : -3).map((post) => (
+                {visiblePosts.map((post) => (
                   <li key={post.id} className="flex items-center justify-between px-4 py-3 gap-4">
                     <div className="flex-1 min-w-0">
                       <p className="text-gray-900 font-medium truncate">{post.title}</p>
@@ -677,10 +719,10 @@ export default function PainelPage() {
                   </li>
                 ))}
               </ul>
-              {posts.length > 3 && (
+              {sortedPosts.length > 3 && (
                 <button onClick={() => setExpandedPosts(!expandedPosts)}
                   className="w-full text-center text-sm font-semibold text-blue-600 hover:text-blue-700 py-2 mt-2">
-                  {expandedPosts ? "↑ Mostrar menos" : `↓ Ver todos (${posts.length} posts)`}
+                  {expandedPosts ? "↑ Mostrar menos" : `↓ Ver todos (${sortedPosts.length} posts)`}
                 </button>
               )}
             </>
@@ -750,7 +792,7 @@ export default function PainelPage() {
           {productsError ? <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{productsError}</p> : null}
 
           <ul className="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100">
-            {products.slice(expandedProducts ? 0 : -3).map((product) => (
+            {visibleProducts.map((product) => (
               <li key={product.id} className="flex items-center justify-between px-4 py-3 gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="text-gray-900 font-medium truncate">{product.name}</p>
@@ -783,12 +825,12 @@ export default function PainelPage() {
               </li>
             ))}
           </ul>
-          {products.length > 3 && (
+          {sortedProducts.length > 3 && (
             <button
               onClick={() => setExpandedProducts(!expandedProducts)}
               className="w-full mt-4 text-center text-sm font-semibold text-blue-600 hover:text-blue-700 py-2"
             >
-              {expandedProducts ? "↑ Mostrar menos" : `↓ Ver todos (${products.length} produtos)`}
+              {expandedProducts ? "↑ Mostrar menos" : `↓ Ver todos (${sortedProducts.length} produtos)`}
             </button>
           )}
         </section>

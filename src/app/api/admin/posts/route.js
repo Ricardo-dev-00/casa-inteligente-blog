@@ -96,8 +96,7 @@ export async function GET(request) {
 
     const { data, error } = await supabase
       .from("posts")
-        .select("*")
-      .order("category")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (error) return Response.json({ error: error.message }, { status: 400 });

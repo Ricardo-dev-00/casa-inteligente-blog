@@ -45,13 +45,52 @@ O sistema combina:
 - `sitemap.xml` dinâmico com rotas estáticas e slugs de posts publicados.
 - Integração com `@vercel/analytics` e `@vercel/speed-insights`.
 
-## Stack
+## Tecnologias Utilizadas
 
-- Next.js `16.2.0`
+### Linguagens e marcação
+
+- JavaScript (ESNext)
+- TypeScript (configuração e tipagem no app)
+- HTML5
+- CSS3
+
+### Frameworks e biblioteca principal
+
+- Next.js `16.2.0` (App Router)
 - React `19.2.4`
+
+### Estilo e UI
+
 - Tailwind CSS `v4`
+- next/font (Geist e Geist Mono)
+
+### Backend, banco e autenticação
+
 - Supabase (`@supabase/supabase-js`)
-- Vercel Analytics + Speed Insights
+- API Routes com autenticação por senha e sessão HttpOnly para CMS
+
+### SEO e dados estruturados
+
+- Metadata API do Next.js
+- Open Graph e Twitter Cards
+- JSON-LD (Schema.org)
+- Robots e Sitemap dinâmicos
+
+### Analytics e observabilidade
+
+- Vercel Analytics (`@vercel/analytics`)
+- Vercel Speed Insights (`@vercel/speed-insights`)
+
+### Deploy e infraestrutura
+
+- Vercel (build e hospedagem)
+- Domínio customizado: https://casainteligente.social.br/
+
+### Ferramentas de desenvolvimento
+
+- Node.js `>= 20`
+- npm `>= 10`
+- ESLint `^9`
 
 ## Requisitos
 

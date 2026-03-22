@@ -31,7 +31,7 @@ export default function Hero() {
         <div className="relative">
           <div className="absolute inset-0 bg-green-100 rounded-2xl rotate-3"></div>
           <Image
-            src="https://images.unsplash.com/photo-1556911220-bff31c812dba?w=1200&q=80&auto=format&fit=crop"
+            src="/hero-casa.svg"
             alt="Produtos para casa"
             width={1200}
             height={900}

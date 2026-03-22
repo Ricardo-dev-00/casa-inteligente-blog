@@ -59,7 +59,12 @@ function getProductIdsFromContent(content) {
 
     const ids = parsed
       .filter((block) => block?.type === "products")
-      .flatMap((block) => (Array.isArray(block?.productIds) ? block.productIds : []))
+      .reduce((acc, block) => {
+        if (Array.isArray(block?.productIds)) {
+          return acc.concat(block.productIds);
+        }
+        return acc;
+      }, [])
       .map((id) => Number(id))
       .filter((id) => Number.isFinite(id));
 

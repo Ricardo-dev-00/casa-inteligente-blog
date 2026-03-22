@@ -12,6 +12,8 @@ export default function ProductCard({ name, image, imageAlt, price, oldPrice, li
         <img
           src={image || "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&q=80"}
           alt={imageAlt || name || "Produto"}
+          loading="lazy"
+          decoding="async"
           className="w-full h-44 object-cover hover:scale-105 transition-transform duration-300"
         />
       </div>

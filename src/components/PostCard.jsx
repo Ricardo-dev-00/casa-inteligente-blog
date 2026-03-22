@@ -9,6 +9,8 @@ export default function PostCard({ title, excerpt, image, imageAlt, category, da
         <img
           src={image || "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&q=80"}
           alt={imageAlt || title || "Post do blog"}
+          loading="lazy"
+          decoding="async"
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
       </div>

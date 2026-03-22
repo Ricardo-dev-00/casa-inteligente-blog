@@ -2,6 +2,8 @@
 
 Projeto de conteúdo com foco em **casa, organização, limpeza, receitas e ofertas**, construído com Next.js App Router, painel CMS próprio e integração com Supabase.
 
+**Site em produção:** https://casainteligente.social.br/
+
 ## Visão Geral
 
 O sistema combina:

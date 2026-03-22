@@ -1,6 +1,6 @@
 # Casa Inteligente Blog
 
-Projeto de conteúdo e monetização com foco em **casa, organização, limpeza, receitas e ofertas**, construído com Next.js App Router, painel CMS próprio e integração com Supabase.
+Projeto de conteúdo com foco em **casa, organização, limpeza, receitas e ofertas**, construído com Next.js App Router, painel CMS próprio e integração com Supabase.
 
 ## Visão Geral
 

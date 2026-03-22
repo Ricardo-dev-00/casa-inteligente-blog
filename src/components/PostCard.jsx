@@ -1,5 +1,3 @@
-"use client";
-
 export default function PostCard({ title, excerpt, image, imageAlt, category, date, href }) {
   const Wrapper = href ? "a" : "div";
   return (
@@ -12,10 +10,6 @@ export default function PostCard({ title, excerpt, image, imageAlt, category, da
           src={image || "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400&q=80"}
           alt={imageAlt || title || "Post do blog"}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Crect width='400' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='14' font-family='sans-serif'%3EImagem indispon%C3%ADvel%3C/text%3E%3C/svg%3E";
-          }}
         />
       </div>
 

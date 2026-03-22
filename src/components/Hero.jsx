@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Hero() {
   return (
     <section className="bg-white border-b border-gray-100">
@@ -17,7 +19,7 @@ export default function Hero() {
           </p>
 
           <div className="flex gap-3">
-            <a href="/ofertas" className="bg-green-500 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-green-600 hover:scale-105 transition duration-200 animate-pulse cursor-pointer text-sm sm:text-base whitespace-nowrap inline-block">
+            <a href="/ofertas" className="bg-green-500 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg hover:bg-green-600 hover:scale-105 transition duration-200 cursor-pointer text-sm sm:text-base whitespace-nowrap inline-block">
               🔥 Ver ofertas
             </a>
             <a href="#categorias" className="border border-gray-400 text-gray-700 px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg bg-white shadow-sm hover:bg-gray-100 hover:border-gray-500 hover:scale-105 transition duration-200 font-semibold text-sm sm:text-base whitespace-nowrap inline-block">
@@ -28,10 +30,15 @@ export default function Hero() {
 
         <div className="relative">
           <div className="absolute inset-0 bg-green-100 rounded-2xl rotate-3"></div>
-          <img
-            src="https://images.unsplash.com/photo-1556911220-bff31c812dba?w=600&q=80"
+          <Image
+            src="https://images.unsplash.com/photo-1556911220-bff31c812dba?w=1200&q=80&auto=format&fit=crop"
             alt="Produtos para casa"
-            className="relative rounded-2xl w-full object-cover shadow-lg"
+            width={1200}
+            height={900}
+            priority
+            fetchPriority="high"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="relative rounded-2xl w-full h-auto object-cover shadow-lg"
           />
         </div>
 
